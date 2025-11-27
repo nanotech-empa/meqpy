@@ -1,0 +1,46 @@
+[build-system]
+requires = ["flit_core >=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "meqpy"
+
+[project]
+name = "meqpy"
+dynamic = ["version", "description"]
+authors = [
+    {name = "Andres Ortega Guerrero", email = "andres.ortega-guerrero@empa.ch"},
+    {name = "Gonçalo Catarina", email = "goncalo.catarina@empa.ch"},
+    {name = "Nils Krane", email = "nils.krane@empa.ch"}
+
+]
+readme = "README.md"
+license = {file = 'LICENSE'}
+classifiers = [
+    "Development Status :: 1 - Planning",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3",
+]
+requires-python = ">=3.10"
+
+[project.optional-dependencies]
+dev = [
+  "bumpver==2023.1129",
+  "pre-commit==3.6.0",
+
+]
+
+[project.scripts]
+[tool.bumpver]
+current_version = "v0.0.1"
+version_pattern = "vMAJOR.MINOR.PATCH[PYTAGNUM]"
+commit_message = "Bump version {old_version} -> {new_version}."
+tag_message = "Release {new_version}."
+tag_scope = "default"
+pre_commit_hook = ""
+post_commit_hook = ""
+commit = true
+tag = true
+push = true
