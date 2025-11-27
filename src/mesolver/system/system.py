@@ -1,6 +1,7 @@
 from .state import State
 from .transition import Transition
 
+
 class System:
     """
     Class to define a physical system for the master equation solver
@@ -18,7 +19,7 @@ class System:
             if state.label == label:
                 return state
         raise ValueError(f"State with label {label} not found in the system.")
-    
+
     def add_transition(self, transition: Transition):
         self.transitions.append(transition)
 
@@ -26,6 +27,6 @@ class System:
         i = self.get_state(label_i)
         j = self.get_state(label_j)
         self.add_transition(Transition(i, j, rate))
-    
+
     def __repr__(self):
         return f"System(name={self.name}, states={self.states})"

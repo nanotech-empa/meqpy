@@ -9,8 +9,5 @@ class Transition:
         self.rate = float(rate)
         self.label = label or f"{state_i.label}->{state_j.label}"
 
-    def add_transition(self, transition: Transition):
-        self.transitions.append(transition)
-
     def __repr__(self):
         return f"Transition({self.label}, rate={self.rate})"

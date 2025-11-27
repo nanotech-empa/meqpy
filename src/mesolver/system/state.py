@@ -7,6 +7,6 @@ class State:
         self.label = label
         self.energy = energy
         self.charge = charge
-    
+
     def __repr__(self):
         return f"State(label={self.label}, energy={self.energy}, charge={self.charge})"
