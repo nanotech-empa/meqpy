@@ -13,9 +13,9 @@ class State:
         Energy of the state, in eV.
     charge : int
         Charge of the state.
-    spin : Real, optional
+    spin : Real or None, optional
         Spin of the state.
-        - Non-negative integer or half-integer (0, 0.5, 1, 1.5, ...).
+        - Non-negative integer or half-integer (0, 0.5, 1, 1.5, ...), or None if unspecified.
         - Default is None.
     """
 
@@ -30,7 +30,7 @@ class State:
         self.label = label
         self.energy = float(energy)
         self.charge = charge
-        self.spin = float(spin)
+        self.spin = float(spin) if spin is not None else None
 
     @staticmethod
     def _validate_label(label):
