@@ -30,7 +30,7 @@ class State:
         self.label = label
         self.energy = float(energy)
         self.charge = charge
-        self.spin = spin
+        self.spin = float(spin)
 
     @staticmethod
     def _validate_label(label):
