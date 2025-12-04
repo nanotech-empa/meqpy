@@ -11,8 +11,9 @@ def solve_equilibrium(W, tol=1e-12):
     ----------
     W : (N, N) np.ndarray
         Master equation matrix.
+        - Sum of columns = 0 within 'tol' (property of master equation matrix).
     tol : float, optional
-        Numerical tolerance for checking positivity of 'Peq'.
+        Numerical tolerance for checking positivity of 'Peq' and property of 'W'.
         - Non-negative.
         - Default is 1e-12.
 
@@ -28,6 +29,10 @@ def solve_equilibrium(W, tol=1e-12):
     If W @ Peq = 0 has multiple linearly independent solutions,
         the first one is used and a warning is issued.
     """
+    # check tol
+    if not isinstance(tol, (int, float)) or tol < 0:
+        raise ValueError(f"tol must be a non-negative number, but got {tol}.")
+
     # check W
     if not isinstance(W, np.ndarray) or W.ndim != 2:
         raise ValueError(
@@ -36,10 +41,12 @@ def solve_equilibrium(W, tol=1e-12):
         )
     if W.shape[0] != W.shape[1]:
         raise ValueError(f"Matrix W must be square, but has shape {W.shape}.")
-
-    # check tol
-    if not isinstance(tol, (int, float)) or tol < 0:
-        raise ValueError(f"tol must be a non-negative number, but got {tol}.")
+    col_sums = W.sum(axis=0)
+    if not np.allclose(col_sums, 0, atol=tol, rtol=0):
+        raise ValueError(
+            f"Each column of W must sum to 0 within tolerance {tol}, "
+            f"but got column sums: {col_sums}."
+        )
 
     # solve W @ Peq = 0, with scipy.null_space
     Peq = null_space(W)
