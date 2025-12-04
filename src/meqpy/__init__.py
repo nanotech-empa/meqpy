@@ -4,11 +4,11 @@ meqpy: A modular Python framework for defining systems and solving master equati
 
 from .system.system import System
 from .system.state import State
-from .equations.master_equation import MasterEquation
+from .master_equation.equilibrium import solve_equilibrium
 
 __all__ = [
     "System",
     "State",
     "Transition",
-    "MasterEquation",
+    "solve_equilibrium",
 ]
