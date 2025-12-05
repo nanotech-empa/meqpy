@@ -25,6 +25,11 @@ classifiers = [
 ]
 requires-python = ">=3.10"
 
+dependencies = [
+    "numpy>=1.20",
+    "scipy>=1.10"
+]
+
 [project.optional-dependencies]
 dev = [
   "bumpver==2023.1129",
