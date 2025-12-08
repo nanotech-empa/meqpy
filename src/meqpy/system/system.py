@@ -1,5 +1,6 @@
 from .state import State
 from numbers import Real
+from collections.abc import Iterable
 import numpy as np
 
 
@@ -21,6 +22,8 @@ class System:
         **kwargs,
     ):
         self.name = name
+
+        self._states = []
         self.states = states if states is not None else []
 
         self.hwhm = hwhm
@@ -29,6 +32,19 @@ class System:
         self.reorg_shift = reorg_shift
         self.eta = eta
         self.kappa_mode = kappa_mode
+
+    @property
+    def states(self) -> list[State]:
+        return self._states
+
+    @states.setter
+    def states(self, new_states):
+        if not isinstance(new_states, Iterable):
+            new_states = [new_states]
+
+        self._states = []
+        for state in new_states:
+            self.add_state(state)
 
     @property
     def hwhm(self) -> float:
@@ -94,7 +110,7 @@ class System:
             raise TypeError(f"{label} has to be non-negative float but got {input}")
         if input < 0:
             raise ValueError(f"{label} has to be non-negative float but got {input}")
-        return input
+        return float(input)
 
     @staticmethod
     def _verify_input_allowed_str(
@@ -114,11 +130,11 @@ class System:
 
     def add_state(self, state: State):
         if isinstance(state, State):
-            self.states.append(state)
+            self._states.append(state)
         else:
             raise TypeError(f"state has to be State class, but got {state}")
 
-    def get_state(self, label: str) -> State:
+    def get_state(self, label: str | int) -> State:
         if isinstance(label, int):
             return self.states[label]
         for state in self.states:
