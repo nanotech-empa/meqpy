@@ -13,52 +13,72 @@ class State:
         Energy of the state, in eV.
     charge : int
         Charge of the state.
-    spin : Real or None, optional
-        Spin of the state.
-        - Non-negative integer or half-integer (0, 0.5, 1, 1.5, ...), or None if unspecified.
-        - Default is None.
+    multiplicity : int, optional
+        Multiplicity of the state.
+        - Integer larger zero.
+        - Default is 1.
     """
 
     def __init__(
-        self, label: str, energy: Real, charge: int, spin: Real | None = None, **kwargs
+        self, label: str, energy: Real, charge: int, multiplicity: int = 1, **kwargs
     ):
-        self._validate_label(label)
-        self._validate_energy(energy)
-        self._validate_charge(charge)
-        self._validate_spin(spin)
-
         self.label = label
-        self.energy = float(energy)
+        self.energy = energy
         self.charge = charge
-        self.spin = float(spin) if spin is not None else None
+        self.multiplicity = multiplicity
 
-    @staticmethod
-    def _validate_label(label):
-        if not isinstance(label, str):
-            raise TypeError(f"label must be a string, but got {type(label)}.")
+    @property
+    def label(self) -> str:
+        """Label for the state (unique)."""
+        return self._label
 
-    @staticmethod
-    def _validate_energy(energy):
-        if not isinstance(energy, Real):
-            raise TypeError(f"energy must be a real number, but got {type(energy)}.")
+    @label.setter
+    def label(self, new_label: str):
+        if not isinstance(new_label, str):
+            raise TypeError(f"label must be a string, but got {type(new_label)}.")
+        self._label = new_label
 
-    @staticmethod
-    def _validate_charge(charge):
-        if not isinstance(charge, int):
-            raise TypeError(f"charge must be an integer, but got {type(charge)}.")
+    @property
+    def energy(self) -> float:
+        """Energy of the state, in eV."""
+        return self._energy
 
-    @staticmethod
-    def _validate_spin(spin):
-        if spin is not None:
-            if not isinstance(spin, Real):
-                raise TypeError(f"spin must be a real number, but got {type(spin)}.")
-            if spin < 0 or (2 * spin) % 1 != 0:
-                raise ValueError(
-                    f"spin must be a non-negative integer or half-integer, but got {spin}."
-                )
+    @energy.setter
+    def energy(self, new_energy):
+        if not isinstance(new_energy, Real):
+            raise TypeError(
+                f"energy must be a real number, but got {type(new_energy)}."
+            )
+        self._energy = float(new_energy)
+
+    @property
+    def charge(self) -> int:
+        """Charge of the state."""
+        return self._charge
+
+    @charge.setter
+    def charge(self, new_charge):
+        if not isinstance(new_charge, int):
+            raise TypeError(f"charge must be an integer, but got {type(new_charge)}.")
+        self._charge = new_charge
+
+    @property
+    def multiplicity(self) -> int:
+        """Multiplicity of the state."""
+        return self._multiplicity
+
+    @multiplicity.setter
+    def multiplicity(self, new_multiplicity):
+        if not isinstance(new_multiplicity, int):
+            raise TypeError(
+                f"multiplicity must be an integer, but got {type(new_multiplicity)}."
+            )
+        if new_multiplicity <= 0:
+            raise ValueError(
+                f"multiplicity must be larger than zero, but got {new_multiplicity}."
+            )
+        self._multiplicity = new_multiplicity
 
     def __repr__(self):
-        attrs = f"label={self.label}, energy={self.energy}, charge={self.charge}"
-        if self.spin is not None:
-            attrs += f", spin={self.spin}"
+        attrs = f"label={self.label}, energy={self.energy}, charge={self.charge}, multiplicity={self.multiplicity}"
         return f"State({attrs})"
