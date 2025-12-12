@@ -11,7 +11,6 @@ def solve_equilibrium(W, tol=1e-12):
     ----------
     W : (N, N) np.ndarray
         Master equation matrix.
-        - Sum of columns = 0 within 'tol' (property of master equation matrix).
     tol : float, optional
         Numerical tolerance for checking positivity of 'Peq' and property of 'W'.
         - Non-negative.
@@ -28,6 +27,8 @@ def solve_equilibrium(W, tol=1e-12):
     -----
     If W @ Peq = 0 has multiple linearly independent solutions,
         the first one is used and a warning is issued.
+
+    Diagonal of W is filled such that each column sums to zero before solving.
     """
     # check tol
     if not isinstance(tol, (int, float)) or tol < 0:
@@ -41,12 +42,9 @@ def solve_equilibrium(W, tol=1e-12):
         )
     if W.shape[0] != W.shape[1]:
         raise ValueError(f"Matrix W must be square, but has shape {W.shape}.")
-    col_sums = W.sum(axis=0)
-    if not np.allclose(col_sums, 0, atol=tol, rtol=0):
-        raise ValueError(
-            f"Each column of W must sum to 0 within tolerance {tol}, "
-            f"but got column sums: {col_sums}."
-        )
+
+    # fill diagonal
+    W = fill_diagonal(W)
 
     # solve W @ Peq = 0, with scipy.null_space
     Peq = null_space(W)
@@ -71,3 +69,84 @@ def solve_equilibrium(W, tol=1e-12):
         )
 
     return Peq
+
+
+def solve_equilibrium_nd(W: np.ndarray, tol=1e-12) -> np.ndarray:
+    """
+    Solve the master equation at equilibrium: W @ Peq = 0 for N-dimensional arrays
+    where the last two dimensions are the square matrix.
+
+    Parameters
+    ----------
+    W : (..., N, N) np.ndarray
+        Array with last two dimensions containing Master equation matrices.
+    tol : float, optional
+        Numerical tolerance for checking positivity of 'Peq' and property of 'W'.
+        - Non-negative.
+        - Default is 1e-12.
+
+    Returns
+    -------
+    Peq : (..., N) np.ndarray
+        Equilibrium occupation probability vector.
+        - Sum normalized to 1.
+        - All entries ≥ 0 within 'tol'.
+
+    Notes
+    -----
+    If W @ Peq = 0 has multiple linearly independent solutions,
+        the first one is used and a warning is issued.
+    Diagonal of last two axes of W is filled,
+        such that each column sums to zero before solving.
+    """
+    # check W
+    if not isinstance(W, np.ndarray) or W.ndim < 2:
+        raise ValueError(
+            f"W must be at least a 2D NumPy array, but got {type(W)} with"
+            f" shape {getattr(W, 'shape', None)}."
+        )
+    if W.shape[-2] != W.shape[-1]:
+        raise ValueError(
+            f"Matrix W must be square in the last two dimensions, but has shape {W.shape}."
+        )
+
+    # prepare output
+    Peq_shape = W.shape[:-1]
+    Peq = np.zeros(Peq_shape)
+
+    # iterate over all indices except the last two
+    it = np.nditer(Peq[..., 0], flags=["multi_index"], op_flags=["readwrite"])
+    while not it.finished:
+        # get current index
+        idx = it.multi_index
+
+        # extract current W matrix
+        Wi = W[idx]
+
+        # solve equilibrium for current W
+        Peq[idx] = solve_equilibrium(Wi, tol=tol)
+
+        it.iternext()
+
+    return Peq
+
+
+def fill_diagonal(W: np.ndarray) -> np.ndarray:
+    """
+    Fill the diagonal of the master equation matrix W such that each column sums to zero.
+    Supports N-dimensional arrays where the last two dimensions are the square matrix.
+
+    Parameters
+    ----------
+    W : (..., N, N) np.ndarray
+        Master equation matrix with off-diagonal elements representing transition rates.
+
+    Returns
+    -------
+    W : (..., N, N) np.ndarray
+        Master equation matrix with filled diagonal.
+    """
+    sum_over_cols = np.sum(W, axis=-2)
+    diag_indices = np.arange(W.shape[-1])
+    W[..., diag_indices, diag_indices] -= sum_over_cols
+    return W
