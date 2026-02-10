@@ -249,6 +249,17 @@ class System:
         return np.array([state.charge for state in self.states])
 
     @property
+    def multiplicities(self) -> np.ndarray:
+        """Multiplicities of all states in system
+
+        Returns
+        -------
+        spins : (N,) np.ndarray
+            Vector containing multiplicities of all states in system.
+        """
+        return np.array([state.multiplicity for state in self.states])
+
+    @property
     def dE(self) -> np.ndarray:
         """Energy difference matrix of states in system.
 
@@ -433,6 +444,29 @@ class System:
         W_charging *= np.abs(self.dQ) == 1
 
         return W_charging
+
+    @property
+    def clebsch_gordan_factors(self) -> np.ndarray:
+        """Return matrix with Clebsch-Gordan factors for all state transitions in system.
+
+        Returns
+        -------
+        cg_factors : (N,N) np.ndarray
+            Clebsch-Gordan factors matrix.
+
+        Notes
+        -----
+        The Clebsch-Gordan factor for a transition from state i to state f is calculated as:
+            cg_factor(f,i) = max(mf,mi)/mf
+        with mi and mf being the multiplicities of the initial and final states, respectively.
+        """
+
+        multiplicities = self.multiplicities.astype(float)
+
+        mf = multiplicities[:, None]
+        mi = multiplicities[None, :]
+
+        return np.maximum(mf, mi) / mf
 
     def __repr__(self):
         return f"System(name={self.name}, states={self.states})"
