@@ -446,13 +446,12 @@ class System:
         with mi and mf being the multiplicities of the initial and final states, respectively.
         """
 
-        cg_factors = self.zeros
-        for f, i in np.ndindex(cg_factors.shape):
-            mi = self.states[i].multiplicity
-            mf = self.states[f].multiplicity
-            cg_factors[f, i] = max(mf, mi) / mf
+        multiplicities = self.multiplicities.astype(float)
 
-        return cg_factors
+        mf = multiplicities[:, None]
+        mi = multiplicities[None, :]
+
+        return np.maximum(mf, mi) / mf
 
     def __repr__(self):
         return f"System(name={self.name}, states={self.states})"
