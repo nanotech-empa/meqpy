@@ -1,6 +1,7 @@
 from .state import State
+from .utils import LineShape, KappaMode
 from numbers import Real
-from collections.abc import Iterable
+from typing import Optional, Sequence
 import numpy as np
 from scipy.special import erf
 
@@ -12,13 +13,13 @@ class System:
 
     def __init__(
         self,
-        name="GenericSystem",
-        states=None,
+        name: Optional[str] = None,
+        states: Optional[Sequence] = None,
         hwhm: float = 0.0,
-        lineshape: str = "gaussian",
+        lineshape: LineShape = LineShape.GAUSS,
         workfunction: float = 5.0,
         reorg_shift: float = 0.0,
-        kappa_mode: str = "full",
+        kappa_mode: KappaMode = KappaMode.FULL,
         **kwargs,
     ):
         """Initialize System.
@@ -43,10 +44,9 @@ class System:
             - 'constant' : decay through rectangular potential barrier with height given by workfunction
             - 'full' (default) : decay through rectangular potential barrier depending on workfunction, bias voltage and energy of states
         """
-        self.name = name
+        self.name = name if name is not None else self.__class__.__name__
 
-        self._states = []
-        self.states = states if states is not None else []
+        self.states = list(states) if states is not None else []
 
         self.hwhm = hwhm
         self.lineshape = lineshape
@@ -61,8 +61,10 @@ class System:
 
     @states.setter
     def states(self, new_states: list[State]):
-        if not isinstance(new_states, Iterable):
+        if not isinstance(new_states, Sequence):
             new_states = [new_states]
+        else:
+            new_states = list(new_states)
 
         self._states = []
         for state in new_states:
@@ -80,14 +82,20 @@ class System:
     @property
     def lineshape(self) -> str:
         """Lineshape of transition rate derivative: 'gaussian', 'lorentzian' or 'dirac'."""
-        return self._lineshape
+        return self._lineshape.value
 
     @lineshape.setter
-    def lineshape(self, new_lineshape: str):
-        allowed_lineshapes = ["gaussian", "lorentzian", "dirac"]
-        self._lineshape = self._verify_input_allowed_str(
-            new_lineshape, allowed_lineshapes, "lineshape"
-        )
+    def lineshape(self, lineshape: str):
+        if isinstance(lineshape, str):
+            try:
+                self._lineshape = LineShape(lineshape)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid lineshape '{lineshape}'. "
+                    f"Allowed values: {[m.value for m in LineShape]}"
+                )
+        else:
+            raise TypeError(f"lineshape has to be a string, but got {type(lineshape)}.")
 
     @property
     def workfunction(self) -> float:
@@ -118,14 +126,22 @@ class System:
         - 'constant' : decay through rectangular potential barrier with height given by workfunction
         - 'full' : decay through rectangular potential barrier depending on workfunction, bias voltage and energy of states
         """
-        return self._kappa_mode
+        return self._kappa_mode.value
 
     @kappa_mode.setter
-    def kappa_mode(self, new_kappa_mode: str):
-        allowed_kappa_modes = ["10", "constant", "full"]
-        self._kappa_mode = self._verify_input_allowed_str(
-            new_kappa_mode, allowed_kappa_modes, "kappa_mode"
-        )
+    def kappa_mode(self, kappa_mode: str):
+        if isinstance(kappa_mode, str):
+            try:
+                self._kappa_mode = KappaMode(kappa_mode)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid kappa_mode '{kappa_mode}'. "
+                    f"Allowed values: {[m.value for m in KappaMode]}"
+                )
+        else:
+            raise TypeError(
+                f"kappa_mode has to be a string, but got {type(kappa_mode)}."
+            )
 
     @staticmethod
     def _verify_input_nonnegative_float(input: float, label: str) -> float:
@@ -137,23 +153,6 @@ class System:
         if input < 0:
             raise ValueError(f"{label} has to be non-negative float but got {input}")
         return float(input)
-
-    @staticmethod
-    def _verify_input_allowed_str(
-        input: str, allowed_str: list[str], label: str
-    ) -> str:
-        """Verifies input is a string in allowed_str list."""
-        if not isinstance(input, str):
-            raise TypeError(f"{label} has to be string but got {type(input)}")
-
-        input = input.lower()
-        if input in allowed_str:
-            return input
-        raise ValueError(
-            f"{label} has to be one of the following strings: "
-            f"{', '.join(allowed_str)}; "
-            f"but got {input}"
-        )
 
     def add_state(self, state: State):
         """Add state to system.
