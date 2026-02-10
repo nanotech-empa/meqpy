@@ -5,6 +5,7 @@ meqpy: A modular Python framework for defining systems and solving master equati
 __version__ = "0.0.1"
 
 from .system.system import System
+from .system.dot import QuantumDot
 from .system.state import State
 from .master_equation.equilibrium import (
     solve_equilibrium,
@@ -14,6 +15,7 @@ from .master_equation.equilibrium import (
 
 __all__ = [
     "System",
+    "QuantumDot",
     "State",
     "Transition",
     "solve_equilibrium",
