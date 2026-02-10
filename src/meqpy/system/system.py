@@ -1,5 +1,5 @@
 from .state import State
-from .utils import LineShape, KappaMode
+from .types import LineShape, KappaMode
 from numbers import Real
 from typing import Optional, Sequence
 import numpy as np
