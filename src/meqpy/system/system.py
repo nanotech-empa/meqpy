@@ -86,16 +86,8 @@ class System:
 
     @lineshape.setter
     def lineshape(self, lineshape: str):
-        if isinstance(lineshape, str):
-            try:
-                self._lineshape = LineShape(lineshape)
-            except ValueError:
-                raise ValueError(
-                    f"Invalid lineshape '{lineshape}'. "
-                    f"Allowed values: {[m.value for m in LineShape]}"
-                )
-        else:
-            raise TypeError(f"lineshape has to be a string, but got {type(lineshape)}.")
+        self._lineshape = LineShape(lineshape)
+        # self._lineshape = self._validate_type(lineshape, LineShape, "lineshape")
 
     @property
     def workfunction(self) -> float:
@@ -130,18 +122,8 @@ class System:
 
     @kappa_mode.setter
     def kappa_mode(self, kappa_mode: str):
-        if isinstance(kappa_mode, str):
-            try:
-                self._kappa_mode = KappaMode(kappa_mode)
-            except ValueError:
-                raise ValueError(
-                    f"Invalid kappa_mode '{kappa_mode}'. "
-                    f"Allowed values: {[m.value for m in KappaMode]}"
-                )
-        else:
-            raise TypeError(
-                f"kappa_mode has to be a string, but got {type(kappa_mode)}."
-            )
+        self._kappa_mode = KappaMode(kappa_mode)
+        # self._kappa_mode = self._validate_type(kappa_mode, KappaMode, "kappa_mode")
 
     @staticmethod
     def _verify_input_nonnegative_float(input: float, label: str) -> float:
@@ -153,6 +135,18 @@ class System:
         if input < 0:
             raise ValueError(f"{label} has to be non-negative float but got {input}")
         return float(input)
+
+    @staticmethod
+    def _validate_type(value: str, enum_cls, name: str):
+        """Validate a string and convert it to an Enum member."""
+        if not isinstance(value, str):
+            raise TypeError(f"{name} has to be a string, but got {type(value)}.")
+
+        try:
+            return enum_cls(value)
+        except ValueError:
+            allowed = [m.value for m in enum_cls]
+            raise ValueError(f"Invalid {name} '{value}'. Allowed values: {allowed}")
 
     def add_state(self, state: State):
         """Add state to system.
