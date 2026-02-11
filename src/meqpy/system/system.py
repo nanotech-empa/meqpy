@@ -1,37 +1,57 @@
 from .state import State
+from .types import LineShape, KappaMode
 from numbers import Real
-from collections.abc import Iterable
+from typing import Optional, Sequence
 import numpy as np
 from scipy.special import erf
 
 
 class System:
     """
-    Class to define a physical system for creating a hopping matrix
+    Class to define a physical system for creating a transition matrix
     """
 
     def __init__(
         self,
-        name="GenericSystem",
-        states=None,
+        name: Optional[str] = None,
+        states: Optional[Sequence] = None,
         hwhm: float = 0.0,
-        lineshape: str = "gaussian",
+        lineshape: LineShape = LineShape.GAUSS,
         workfunction: float = 5.0,
         reorg_shift: float = 0.0,
-        eta: float = 1.0,
-        kappa_mode: str = "full",
+        kappa_mode: KappaMode = KappaMode.FULL,
         **kwargs,
     ):
-        self.name = name
+        """Initialize System.
 
-        self._states = []
-        self.states = states if states is not None else []
+        Parameters
+        ----------
+        name : str, optional
+            Name of System, by default "GenericSystem"
+        states : _type_, optional
+            List of States, by default None
+        hwhm : float, optional
+            Half width at half maximum of energy dependent transition rate in eV, by default 0.0
+        lineshape : str, optional
+            Lineshape of transition rate derivative: 'gaussian', 'lorentzian' or 'dirac'., by default "gaussian"
+        workfunction : float, optional
+            Workfunction of System in eV, by default 5.0
+        reorg_shift : float, optional
+            Shift of ion resonances, due to reorganization energy, in eV, by default 0.0
+        kappa_mode : str, optional
+            Flag to handle decay of wavefunction into vacuum:"
+            - '10' : decay by a factor of 0.1 per Angstrom
+            - 'constant' : decay through rectangular potential barrier with height given by workfunction
+            - 'full' (default) : decay through rectangular potential barrier depending on workfunction, bias voltage and energy of states
+        """
+        self.name = name if name is not None else self.__class__.__name__
+
+        self.states = list(states) if states is not None else []
 
         self.hwhm = hwhm
         self.lineshape = lineshape
         self.workfunction = workfunction
         self.reorg_shift = reorg_shift
-        self.eta = eta
         self.kappa_mode = kappa_mode
 
     @property
@@ -41,8 +61,10 @@ class System:
 
     @states.setter
     def states(self, new_states: list[State]):
-        if not isinstance(new_states, Iterable):
+        if not isinstance(new_states, Sequence):
             new_states = [new_states]
+        else:
+            new_states = list(new_states)
 
         self._states = []
         for state in new_states:
@@ -59,15 +81,13 @@ class System:
 
     @property
     def lineshape(self) -> str:
-        """Lineshape of transition rate derivative: 'gaussian', 'lorentzian' or 'stepwise'."""
-        return self._lineshape
+        """Lineshape of transition rate derivative: 'gaussian', 'lorentzian' or 'dirac'."""
+        return self._lineshape.value
 
     @lineshape.setter
-    def lineshape(self, new_lineshape: str):
-        allowed_lineshapes = ["gaussian", "lorentzian", "stepwise"]
-        self._lineshape = self._verify_input_allowed_str(
-            new_lineshape, allowed_lineshapes, "lineshape"
-        )
+    def lineshape(self, lineshape: str):
+        self._lineshape = LineShape(lineshape)
+        # self._lineshape = self._validate_type(lineshape, LineShape, "lineshape")
 
     @property
     def workfunction(self) -> float:
@@ -92,55 +112,41 @@ class System:
         )
 
     @property
-    def eta(self) -> float:
-        """Constant calibration factor of tunneling current."""
-        return self._eta
-
-    @eta.setter
-    def eta(self, new_eta: float):
-        self._eta = self._verify_input_nonnegative_float(new_eta, "eta")
-
-    @property
     def kappa_mode(self) -> str:
         """Flag to handle decay of wavefunction into vacuum:
         - '10' : decay by a factor of 0.1 per Angstrom
         - 'constant' : decay through rectangular potential barrier with height given by workfunction
         - 'full' : decay through rectangular potential barrier depending on workfunction, bias voltage and energy of states
         """
-        return self._kappa_mode
+        return self._kappa_mode.value
 
     @kappa_mode.setter
-    def kappa_mode(self, new_kappa_mode: str):
-        allowed_kappa_modes = ["10", "constant", "full"]
-        self._kappa_mode = self._verify_input_allowed_str(
-            new_kappa_mode, allowed_kappa_modes, "kappa_mode"
-        )
+    def kappa_mode(self, kappa_mode: str):
+        self._kappa_mode = KappaMode(kappa_mode)
+        # self._kappa_mode = self._validate_type(kappa_mode, KappaMode, "kappa_mode")
 
     @staticmethod
     def _verify_input_nonnegative_float(input: float, label: str) -> float:
         """Verify input is real number and not negative."""
         if not isinstance(input, Real):
-            raise TypeError(f"{label} has to be non-negative float but got {input}")
+            raise TypeError(
+                f"{label} has to be non-negative float but got {type(input)}"
+            )
         if input < 0:
             raise ValueError(f"{label} has to be non-negative float but got {input}")
         return float(input)
 
     @staticmethod
-    def _verify_input_allowed_str(
-        input: str, allowed_str: list[str], label: str
-    ) -> str:
-        """Verifies input is a string in allowed_str list."""
-        if not isinstance(input, str):
-            raise TypeError(f"{label} has to be string but got {input}")
+    def _validate_type(value: str, enum_cls, name: str):
+        """Validate a string and convert it to an Enum member."""
+        if not isinstance(value, str):
+            raise TypeError(f"{name} has to be a string, but got {type(value)}.")
 
-        input = input.lower()
-        if input in allowed_str:
-            return input
-        raise ValueError(
-            f"{label} has to be one of the following strings: "
-            f"{', '.join(allowed_str)}; "
-            f"but got {input}"
-        )
+        try:
+            return enum_cls(value)
+        except ValueError:
+            allowed = [m.value for m in enum_cls]
+            raise ValueError(f"Invalid {name} '{value}'. Allowed values: {allowed}")
 
     def add_state(self, state: State):
         """Add state to system.
@@ -158,7 +164,7 @@ class System:
         if isinstance(state, State):
             self._states.append(state)
         else:
-            raise TypeError(f"state has to be State class, but got {state}")
+            raise TypeError(f"state has to be State class, but got {type(state)}")
 
     def get_state(self, label: str | int) -> State:
         """Get State object for given label or index.
@@ -209,7 +215,7 @@ class System:
         raise ValueError(f"State with label {label} not found in the system.")
 
     @property
-    def n(self) -> int:
+    def num_states(self) -> int:
         """Number of states in system"""
         return len(self.states)
 
@@ -280,7 +286,7 @@ class System:
             Square array of with shape (n,n)
             and n being number of states in system.
         """
-        return np.zeros((self.n, self.n))
+        return np.zeros((self.num_states, self.num_states))
 
     @property
     def ones(self) -> np.ndarray:
@@ -292,7 +298,7 @@ class System:
             Square array of with shape (n,n)
             and n being number of states in system.
         """
-        return np.ones((self.n, self.n))
+        return np.ones((self.num_states, self.num_states))
 
     def matrix_by_states(
         self, initial: int | str, final: int | str, symmetric: bool = False
@@ -324,32 +330,32 @@ class System:
         """
         if not isinstance(initial, int):
             initial = self.get_index(initial)
-        elif initial < 0 or initial >= self.n:
+        elif initial < 0 or initial >= self.num_states:
             raise IndexError(f"Index {initial} for initial state out of range.")
 
         if not isinstance(final, int):
             final = self.get_index(final)
-        elif final < 0 or final >= self.n:
+        elif final < 0 or final >= self.num_states:
             raise IndexError(f"Index {final} for final state out of range.")
 
-        mat = np.zeros((self.n, self.n))
+        mat = self.zeros
         mat[final, initial] = 1.0
         if symmetric:
             mat[initial, final] = 1.0
         return mat
 
-    def stepwise_lineshape_integral(self, x: np.ndarray | float) -> np.ndarray | float:
-        """Calculate integral over stepwise lineshape.
+    def dirac_lineshape_integral(self, x: np.ndarray | float) -> np.ndarray | float:
+        """Calculate integral over dirac peak (Heaviside function).
 
         Parameters
         ----------
-        x : (N,N) np.ndarray | float
+        x : (M,) np.ndarray | float
             Energy variable.
 
         Returns
         -------
-        integral : (N,N) np.ndarray | float
-            Integral over stepwise lineshape.
+        integral : (M,) np.ndarray | float
+            Integral over dirac peak (Heaviside function).
         """
 
         integral = 0.5 * (np.sign(x) + 1)
@@ -360,12 +366,12 @@ class System:
 
         Parameters
         ----------
-        x : (N,N) np.ndarray | float
+        x : (M,) np.ndarray | float
             Energy variable.
 
         Returns
         -------
-        integral : (N,N) np.ndarray | float
+        integral : (M,) np.ndarray | float
             Integral over Gaussian lineshape.
         """
 
@@ -380,12 +386,12 @@ class System:
 
         Parameters
         ----------
-        x : (N,N) np.ndarray | float
+        x : (M,) np.ndarray | float
             Energy variable.
 
         Returns
         -------
-        integral : (N,N) np.ndarray | float
+        integral : (M,) np.ndarray | float
             Integral over Lorentzian lineshape.
         """
 
@@ -394,12 +400,12 @@ class System:
         return integral
 
     def charging_transitions_normalized(self, V: float | np.ndarray) -> np.ndarray:
-        """Calculate normalized charging transition rates matrix.
+        """Calculate normalized charging transition rates between all states for given bias voltage(s).
 
         Parameters
         ----------
         V : float | (M,) np.ndarray
-            Bias voltage(s) in eV.
+            Bias voltage(s) in V.
 
         Returns
         -------
@@ -410,15 +416,16 @@ class System:
         dE = self.dE + self.reorg_shift
         dQ = self.dQ
 
-        if self.lineshape == "stepwise" or self.hwhm == 0.0:
-            lineshape_integral = self.stepwise_lineshape_integral
+        # select lineshape of transition rate derivative
+        if self.lineshape == "dirac" or self.hwhm == 0.0:
+            lineshape_integral = self.dirac_lineshape_integral
         elif self.lineshape == "gaussian":
             lineshape_integral = self.gaussian_lineshape_integral
         elif self.lineshape == "lorentzian":
             lineshape_integral = self.lorentzian_lineshape_integral
 
         if isinstance(V, np.ndarray):
-            W_charging = np.zeros((V.size, self.n, self.n))
+            W_charging = np.zeros((V.size, self.num_states, self.num_states))
             for i, V_i in enumerate(V):
                 energy_arg = -dE - dQ * V_i
                 W_charging[i] = lineshape_integral(energy_arg)
@@ -426,6 +433,7 @@ class System:
             energy_arg = -dE - dQ * V
             W_charging = lineshape_integral(energy_arg)
 
+        # assert only charging transitions with dQ == +1 or -1 are non-zero
         W_charging *= np.abs(self.dQ) == 1
 
         return W_charging
