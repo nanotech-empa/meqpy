@@ -1,6 +1,5 @@
 from .state import State
-from .types import LineShape, KappaMode
-from numbers import Real
+from ..utils.types import LineShape, KappaMode, is_real_or_1darray, is_nonnegative_float
 from typing import Optional, Sequence
 import numpy as np
 from scipy.special import erf
@@ -76,8 +75,8 @@ class System:
         return self._hwhm
 
     @hwhm.setter
-    def hwhm(self, new_hwhm: float):
-        self._hwhm = self._verify_input_nonnegative_float(new_hwhm, "hwhm")
+    def hwhm(self, hwhm: float):
+        self._hwhm = is_nonnegative_float(hwhm, "hwhm")
 
     @property
     def lineshape(self) -> str:
@@ -87,7 +86,6 @@ class System:
     @lineshape.setter
     def lineshape(self, lineshape: str):
         self._lineshape = LineShape(lineshape)
-        # self._lineshape = self._validate_type(lineshape, LineShape, "lineshape")
 
     @property
     def workfunction(self) -> float:
@@ -95,10 +93,8 @@ class System:
         return self._workfunction
 
     @workfunction.setter
-    def workfunction(self, new_workfunction: float):
-        self._workfunction = self._verify_input_nonnegative_float(
-            new_workfunction, "workfunction"
-        )
+    def workfunction(self, workfunction: float):
+        self._workfunction = is_nonnegative_float(workfunction, "workfunction")
 
     @property
     def reorg_shift(self) -> float:
@@ -106,10 +102,8 @@ class System:
         return self._reorg_shift
 
     @reorg_shift.setter
-    def reorg_shift(self, new_reorg_shift: float):
-        self._reorg_shift = self._verify_input_nonnegative_float(
-            new_reorg_shift, "reorg_shift"
-        )
+    def reorg_shift(self, reorg_shift: float):
+        self._reorg_shift = is_nonnegative_float(reorg_shift, "reorg_shift")
 
     @property
     def kappa_mode(self) -> str:
@@ -123,30 +117,6 @@ class System:
     @kappa_mode.setter
     def kappa_mode(self, kappa_mode: str):
         self._kappa_mode = KappaMode(kappa_mode)
-        # self._kappa_mode = self._validate_type(kappa_mode, KappaMode, "kappa_mode")
-
-    @staticmethod
-    def _verify_input_nonnegative_float(input: float, label: str) -> float:
-        """Verify input is real number and not negative."""
-        if not isinstance(input, Real):
-            raise TypeError(
-                f"{label} has to be non-negative float but got {type(input)}"
-            )
-        if input < 0:
-            raise ValueError(f"{label} has to be non-negative float but got {input}")
-        return float(input)
-
-    @staticmethod
-    def _validate_type(value: str, enum_cls, name: str):
-        """Validate a string and convert it to an Enum member."""
-        if not isinstance(value, str):
-            raise TypeError(f"{name} has to be a string, but got {type(value)}.")
-
-        try:
-            return enum_cls(value)
-        except ValueError:
-            allowed = [m.value for m in enum_cls]
-            raise ValueError(f"Invalid {name} '{value}'. Allowed values: {allowed}")
 
     def add_state(self, state: State):
         """Add state to system.
@@ -424,19 +394,18 @@ class System:
         elif self.lineshape == "lorentzian":
             lineshape_integral = self.lorentzian_lineshape_integral
 
-        if isinstance(V, np.ndarray):
-            W_charging = np.zeros((V.size, self.num_states, self.num_states))
-            for i, V_i in enumerate(V):
-                energy_arg = -dE - dQ * V_i
-                W_charging[i] = lineshape_integral(energy_arg)
-        else:
-            energy_arg = -dE - dQ * V
-            W_charging = lineshape_integral(energy_arg)
+        V = is_real_or_1darray(V, "V")  # make sure V is array of shape (M,)
+
+        # offset voltages by energies of ion resonances --> shape (M,N,N)
+        energy_arg = -dE[None, ...] - dQ[None, ...] * V[..., None, None]
+
+        # voltage dependend transition probability for charging
+        W_charging = lineshape_integral(energy_arg)
 
         # assert only charging transitions with dQ == +1 or -1 are non-zero
         W_charging *= np.abs(self.dQ) == 1
 
-        return W_charging
+        return np.squeeze(W_charging)
 
     @property
     def clebsch_gordan_factors(self) -> np.ndarray:
