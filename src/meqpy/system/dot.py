@@ -1,4 +1,10 @@
 from .system import System
+from ..utils.types import (
+    KappaMode,
+    is_real_or_1darray,
+    is_stack_of_square_matrices,
+    is_nonnegative_float,
+)
 from ..utils.physical_constants import m_e, q_e, hbar
 from numbers import Real
 import numpy as np
@@ -20,9 +26,7 @@ class QuantumDot(System):
 
     @eta_sample.setter
     def eta_sample(self, new_eta: float):
-        self._eta_sample = super()._verify_input_nonnegative_float(
-            new_eta, "eta_sample"
-        )
+        self._eta_sample = is_nonnegative_float(new_eta, "eta_sample")
 
     @property
     def eta_tip(self) -> float:
@@ -31,7 +35,7 @@ class QuantumDot(System):
 
     @eta_tip.setter
     def eta_tip(self, new_eta: float):
-        self._eta_tip = super()._verify_input_nonnegative_float(new_eta, "eta_tip")
+        self._eta_tip = is_nonnegative_float(new_eta, "eta_tip")
 
     def tunneling_probability(
         self,
@@ -39,35 +43,33 @@ class QuantumDot(System):
         V: float | np.ndarray = 0.0,
         dE: float | np.ndarray = None,
     ):
-        if isinstance(z, Real):
-            z = np.asarray(z)
-        elif not isinstance(z, np.ndarray):
-            raise ValueError("z must be a float or np.ndarray, but got {type(z)}.")
-        elif not z.ndim == 1:
-            raise ValueError(
-                f"z must be a float or 1D np.ndarray, but got array with shape {z.shape}."
-            )
-
-        if dE is None:
-            dE = self.dE
-        elif isinstance(dE, Real):
-            dE = self.ones * float(dE)
+        z = is_real_or_1darray(z, "z")
 
         kappa_mat = self.kappa(V, dE)
 
         tunneling_prob = np.exp(-2 * kappa_mat[None, ...] * z[..., None, None, None])
+        tunneling_prob *= self.charging_transitions_normalized(V)
+        tunneling_prob *= self.clebsch_gordan_factors
 
         return np.squeeze(tunneling_prob)
 
-    def kappa(self, V: float | np.ndarray, dE: float | np.ndarray) -> np.ndarray:
+    def kappa(
+        self,
+        V: float | np.ndarray,
+        dE: float | np.ndarray = None,
+        kappa_mode: str = None,
+    ) -> np.ndarray:
         """Calculate decay constant kappa for given energy difference(s) and bias voltage(s).
 
         Parameters
         ----------
         V : float | (M,) np.ndarray
-            Bias voltage or 1d array of bias voltages, in eV
+            Bias voltage or 1d array of bias voltages, in eV. Only used in case of kappa_mode='full'.
         dE : float | (N,N) np.ndarray
-            Energy difference between one pair of states or 2d matrix of energy differences between all states, in eV
+            Energy difference between one pair of states or 2d matrix of energy differences between all states, in eV. Only used in case of kappa_mode='full'.
+            If a float is given, it is used for all pairs of states.
+            If None (default) is given,  the 2d matrix of energy differences is calculated from the state energies and reorganization shift:
+                dE[f,i] = (energy[f] - energy[i] + reorg_shift) * (charge[i] - charge[f])
 
         Returns
         -------
@@ -83,43 +85,31 @@ class QuantumDot(System):
             - 'constant': kappa = sqrt(2*m_e*q_e*(workfunction)/hbar^2)*1e-10
             - 'full': kappa = sqrt(2*m_e*q_e*(workfunction - E + V/2)/hbar^2)*1e-10
         """
-        if isinstance(V, Real):
-            V = np.asarray(V)
-        elif not isinstance(V, np.ndarray):
-            raise ValueError(f"V must be a float or np.ndarray, but got {type(V)}.")
-        elif not V.ndim == 1:
-            raise ValueError(
-                f"V must be a float or 1D np.ndarray, but got array with shape {V.shape}."
-            )
 
-        if isinstance(dE, Real):
+        if kappa_mode is not None:
+            kappa_mode = KappaMode(kappa_mode).value
+        else:
+            kappa_mode = self.kappa_mode
+
+        V = is_real_or_1darray(V, "V")
+
+        if type(dE) is type(None):
+            dE = -(self.dE + self.reorg_shift) * self.dQ
+        elif isinstance(dE, Real):
             dE = np.asarray(dE)
-        elif not isinstance(dE, np.ndarray):
-            raise ValueError(f"E must be a float or np.ndarray, but got {type(dE)}.")
-        elif not dE.ndim == 2:
-            raise ValueError(
-                f"E must be a float or 2D np.ndarray, but got array with shape {dE.shape}."
-            )
-        elif dE.shape[0] != dE.shape[1]:
-            raise ValueError(
-                f"E must be a square matrix, but got array with shape {dE.shape}."
-            )
+        else:
+            is_stack_of_square_matrices(dE, "dE", dims=2)  # check if dE is valid input
 
         kappa = np.zeros(V.shape + dE.shape)
-        if self.kappa_mode == "10":
+        if kappa_mode == "10":
             kappa.fill(np.log(10) / 2.0)
-        elif self.kappa_mode == "constant":
+
+        elif kappa_mode == "constant":
             kappa.fill(np.sqrt(2 * m_e * q_e * (self.workfunction) / hbar**2) * 1e-10)
-        elif self.kappa_mode == "full":
-            kappa = (
-                np.sqrt(
-                    2
-                    * m_e
-                    * q_e
-                    * (self.workfunction - dE[None, ...] + V[..., None, None] / 2)
-                    / hbar**2
-                )
-                * 1e-10
-            )
+
+        elif kappa_mode == "full":
+            barrier_height = self.workfunction - dE[None, ...] + V[..., None, None] / 2
+            kappa = np.sqrt(2 * m_e * q_e / hbar**2 * barrier_height)
+            kappa *= 1e-10  # convert from 1/m to 1/Angstrom
 
         return np.squeeze(kappa)
