@@ -3,7 +3,6 @@ from ..utils.types import (
     KappaMode,
     is_real_or_1darray,
     is_stack_of_square_matrices,
-    is_nonnegative_float,
 )
 from ..utils.physical_constants import m_e, q_e, hbar
 from numbers import Real
@@ -13,45 +12,30 @@ import numpy as np
 class QuantumDot(System):
     """A class representing a quantum dot system, inheriting from System."""
 
-    def __init__(self, eta_sample: float = 1.0, eta_tip: float = 1.0, **kwargs):
+    def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-        self.eta_sample = eta_sample
-        self.eta_tip = eta_tip
-
-    @property
-    def eta_sample(self) -> float:
-        """Constant calibration factor of transition rate by tunneling to/from sample."""
-        return self._eta_sample
-
-    @eta_sample.setter
-    def eta_sample(self, new_eta: float):
-        self._eta_sample = is_nonnegative_float(new_eta, "eta_sample")
-
-    @property
-    def eta_tip(self) -> float:
-        """Constant calibration factor of transition rate by tunneling to/from tip."""
-        return self._eta_tip
-
-    @eta_tip.setter
-    def eta_tip(self, new_eta: float):
-        self._eta_tip = is_nonnegative_float(new_eta, "eta_tip")
-
-    def tunneling_probability(
+    def charging_rates(
         self,
         z: float | np.ndarray,
         V: float | np.ndarray = 0.0,
         dE: float | np.ndarray = None,
-    ):
-        z = is_real_or_1darray(z, "z")
-
-        kappa_mat = self.kappa(V, dE)
-
-        tunneling_prob = np.exp(-2 * kappa_mat[None, ...] * z[..., None, None, None])
-        tunneling_prob *= self.charging_transitions_normalized(V)
+    ) -> np.ndarray:
+        tunneling_prob = self.coupling_strength(z, V, dE)
+        tunneling_prob *= self.normalized_charging_transitions(V)
         tunneling_prob *= self.clebsch_gordan_factors
 
         return np.squeeze(tunneling_prob)
+
+    def coupling_strength(
+        self,
+        z: float | np.ndarray,
+        V: float | np.ndarray = 0.0,
+        dE: float | np.ndarray = None,
+    ) -> np.ndarray:
+        z = is_real_or_1darray(z, "z")
+        kappa_mat = self.kappa(V, dE)
+        return np.exp(-2 * kappa_mat[None, ...] * z[..., None, None, None])
 
     def kappa(
         self,

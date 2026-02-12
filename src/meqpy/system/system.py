@@ -369,7 +369,7 @@ class System:
         integral = 0.5 + (1 / np.pi) * np.arctan(x / gamma)
         return integral
 
-    def charging_transitions_normalized(self, V: float | np.ndarray) -> np.ndarray:
+    def normalized_charging_transitions(self, V: float | np.ndarray) -> np.ndarray:
         """Calculate normalized charging transition rates between all states for given bias voltage(s).
 
         Parameters
