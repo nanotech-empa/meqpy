@@ -12,6 +12,7 @@ from .master_equation.equilibrium import (
     solve_equilibrium_nd,
     fill_diagonal,
 )
+from .master_equation.measurement import measurement
 
 __all__ = [
     "System",
@@ -21,4 +22,5 @@ __all__ = [
     "solve_equilibrium",
     "solve_equilibrium_nd",
     "fill_diagonal",
+    "measurement",
 ]
