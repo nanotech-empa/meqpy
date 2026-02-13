@@ -132,17 +132,22 @@ class System:
         Parameters
         ----------
         state : State
-            New state to be added to system.
+            New state to be added to system. If state with same label already exists, it will be overwritten inplace.
 
         Raises
         ------
         TypeError
             If state is not instance of State class.
         """
-        if isinstance(state, State):
+        if not isinstance(state, State):
+            raise TypeError(f"state has to be State class, but got {type(state)}")
+        try:
+            position = self.get_index(state.label)
+        except ValueError:
             self._states.append(state)
         else:
-            raise TypeError(f"state has to be State class, but got {type(state)}")
+            self._states.pop(position)
+            self._states.insert(position, state)
 
     def get_state(self, label: str | int) -> State:
         """Get State object for given label or index.

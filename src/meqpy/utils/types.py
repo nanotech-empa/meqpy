@@ -62,17 +62,14 @@ def is_real_or_1darray(value, name: str):
         If the value is a numpy array but not 1D.
     """
     if isinstance(value, Real):
-        value = np.asarray([value])
+        value = np.asarray(value)
 
     elif not isinstance(value, np.ndarray):
         raise TypeError(
             f"{name} must be float or 1D np.ndarray, but got {type(value)}."
         )
 
-    elif value.ndim == 0:
-        value = np.asarray([value])
-
-    elif value.ndim > 1:
+    elif not value.ndim == 1:
         raise ValueError(
             f"{name} must be float or 1D np.ndarray, but got array with shape {value.shape}."
         )
