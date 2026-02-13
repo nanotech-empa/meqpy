@@ -6,11 +6,16 @@ from ..utils.types import (
     is_nonnegative_float,
     is_stack_of_square_matrices,
 )
-from ..utils.physical_constants import m_e, q_e, hbar
 from typing import Optional, Sequence
 from numbers import Real
 import numpy as np
 from scipy.special import erf
+from scipy import constants as const
+
+# Fundamental constants
+ELECTRON_MASS = const.electron_mass  # kg
+ELEMENTARY_CHARGE = const.elementary_charge  # C
+HBAR = const.hbar  # J·s
 
 
 class System:
@@ -536,8 +541,8 @@ class System:
         -----
         The decay constant kappa is calculated based on the selected kappa_mode:
             - '10': kappa = log(10)/2.0
-            - 'constant': kappa = sqrt(2*m_e*q_e*(workfunction)/hbar^2)*1e-10
-            - 'full': kappa = sqrt(2*m_e*q_e*(workfunction - E + V/2)/hbar^2)*1e-10
+            - 'constant': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2 ) * 1e-10
+            - 'full': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * ( workfunction - E + V/2 )  / HBAR^2 ) * 1e-10
         """
 
         z = is_real_or_1darray(z, "z")
@@ -583,8 +588,8 @@ class System:
         -----
         The decay constant kappa is calculated based on the selected kappa_mode:
             - '10': kappa = log(10)/2.0
-            - 'constant': kappa = sqrt(2 * m_e * q_e * (workfunction)/hbar^2)*1e-10
-            - 'full': kappa = sqrt(2 * m_e * q_e * (workfunction - E + V/2)/hbar^2)*1e-10
+            - 'constant': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2)*1e-10
+            - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - E + V/2) / HBAR^2)*1e-10
         """
 
         if kappa_mode is not None:
@@ -607,11 +612,18 @@ class System:
 
         elif kappa_mode == "constant":
             kappa = np.zeros(V.shape + dE.shape)
-            kappa.fill(np.sqrt(2 * m_e * q_e * (self.workfunction) / hbar**2) * 1e-10)
+            kappa.fill(
+                np.sqrt(
+                    2 * ELECTRON_MASS * ELEMENTARY_CHARGE * self.workfunction / HBAR**2
+                )
+            )
+            kappa *= 1e-10  # convert from 1/m to 1/Angstrom
 
         elif kappa_mode == "full":
             barrier_height = self.workfunction - dE[None, ...] + V[..., None, None] / 2
-            kappa = np.sqrt(2 * m_e * q_e / hbar**2 * barrier_height)
+            kappa = np.sqrt(
+                2 * ELECTRON_MASS * ELEMENTARY_CHARGE / HBAR**2 * barrier_height
+            )
             kappa *= 1e-10  # convert from 1/m to 1/Angstrom
 
         if squeeze:
