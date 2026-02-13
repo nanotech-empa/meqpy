@@ -72,7 +72,7 @@ def is_real_or_1darray(value, name: str):
     if value.ndim == 0:
         return np.asarray([value])
 
-    elif value.ndim > 1:
+    if value.ndim > 1:
         raise ValueError(
             f"{name} must be float or 1D np.ndarray, "
             f"but got {value.ndim}D array with shape {value.shape}."
