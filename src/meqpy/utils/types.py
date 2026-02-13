@@ -1,6 +1,13 @@
 from enum import Enum
 from numbers import Real
 import numpy as np
+from scipy.special import erf
+from scipy import constants as const
+
+# Fundamental constants
+ELECTRON_MASS = const.electron_mass  # kg
+ELEMENTARY_CHARGE = const.elementary_charge  # C
+HBAR = const.hbar  # J·s
 
 
 class ValidatedEnum(Enum):
@@ -21,6 +28,74 @@ class KappaMode(str, ValidatedEnum):
     CONSTANT = "constant"
     FULL = "full"
 
+    def kappa(
+        self,
+        bias: float | np.ndarray,
+        delta: float | np.ndarray,
+        workfunction: float,
+    ) -> np.ndarray:
+        """Return decay constant for given barrier height and dependent on mode of kappa.
+
+        Parameters
+        ----------
+        bias : float | (M,) np.ndarray
+            Bias voltage or 1d array of bias voltages, in V. Only used in case of kappa_mode='full'.
+        delta : float | np.ndarray
+            Only used for kappa_mode='full'. `delta` corresponds to the change in tunneling barrier height an electron experiences,
+            when tunneling to/from the system, charging it from initial state `i` to final state `f`.
+        workfunction : float
+            Workfunction of System in eV
+
+        Returns
+        -------
+        kappa : (M, delta.shape) np.ndarray
+            Decay constant kappa for each transition, depending on kappa_mode.
+
+        Notes
+        -----
+        The decay constant kappa is calculated based on the selected kappa_mode:
+            - '10': kappa = log(10)/2.0
+            - 'constant': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2)*1e-10
+            - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - delta + bias/2) / HBAR^2)*1e-10
+        """
+        bias = is_real_or_1darray(bias, "bias")
+
+        if not isinstance(delta, (Real, np.ndarray)):
+            raise TypeError(f"delta must be Real or np.ndarray, but got {type(delta)}")
+
+        delta = np.asarray(delta)
+
+        is_nonnegative_float(workfunction, "workfunction")
+
+        barrier_height = np.ones(bias.shape + delta.shape) * workfunction
+
+        match self.value:
+            case "10":
+                return self.__kappa10(barrier_height)
+            case "constant":
+                return self.__kappa(barrier_height)
+            case "full":
+                barrier_height += np.subtract.outer(bias / 2, delta)
+                return self.__kappa(barrier_height)
+
+    @staticmethod
+    def __kappa(barrier_height):
+        """Return decay constant for given barrier height"""
+
+        if not (barrier_height > 0).all():
+            raise ValueError("barrier_height must be positive.")
+
+        kappa = np.sqrt(
+            2 * ELECTRON_MASS * ELEMENTARY_CHARGE / HBAR**2 * barrier_height
+        )
+        kappa *= 1e-10
+        return kappa
+
+    @staticmethod
+    def __kappa10(barrier_height):
+        """Return decay constant (of shape barrier height) such that exp(2*kappa) = 10"""
+        return np.ones_like(barrier_height) * np.log(10) / 2.0
+
 
 class LineShape(str, ValidatedEnum):
     """Line shape for transition rate derivative"""
@@ -28,6 +103,104 @@ class LineShape(str, ValidatedEnum):
     GAUSS = "gaussian"
     LOR = "lorentzian"
     DIRAC = "dirac"
+
+    def lineshape_integral(self, x: float | np.ndarray, hwhm: Real):
+        """Calculate integral over lineshape.
+
+        Parameters
+        ----------
+        x : (M,) np.ndarray | float
+            Energy variable.
+        hwhm : float
+            Half width at half maximum of lineshape. If hwhm == 0, lineshape defaults to "dirac".
+
+        Returns
+        -------
+        integral : (M,) np.ndarray | float
+            Integral over lineshape.
+        """
+
+        if not isinstance(x, (Real, np.ndarray)):
+            raise TypeError(f"x must be Real or np.ndarray, but got {type(x)}")
+
+        is_nonnegative_float(hwhm, "hwhm")
+
+        if hwhm == 0:
+            lineshape = "dirac"
+        else:
+            lineshape = self.value
+
+        match lineshape:
+            case "dirac":
+                return self.dirac_lineshape_integral(x)
+
+            case "gaussian":
+                return self.gaussian_lineshape_integral(x, hwhm)
+
+            case "lorentzian":
+                return self.lorentzian_lineshape_integral(x, hwhm)
+
+    @staticmethod
+    def dirac_lineshape_integral(x: np.ndarray | float) -> np.ndarray | float:
+        """Calculate integral over dirac peak (Heaviside function).
+
+        Parameters
+        ----------
+        x : (M,) np.ndarray | float
+            Energy variable.
+
+        Returns
+        -------
+        integral : (M,) np.ndarray | float
+            Integral over dirac peak (Heaviside function).
+        """
+
+        integral = 0.5 * (np.sign(x) + 1)
+        return integral
+
+    @staticmethod
+    def gaussian_lineshape_integral(
+        x: np.ndarray | float,
+        hwhm: float,
+    ) -> np.ndarray | float:
+        """Calculate integral over Gaussian lineshape.
+
+        Parameters
+        ----------
+        x : (M,) np.ndarray | float
+            Energy variable.
+
+        Returns
+        -------
+        integral : (M,) np.ndarray | float
+            Integral over Gaussian lineshape.
+        """
+
+        sigma = hwhm / np.sqrt(2 * np.log(2))
+        integral = 0.5 * (erf(x / (np.sqrt(2) * sigma)) + 1)
+        return integral
+
+    @staticmethod
+    def lorentzian_lineshape_integral(
+        x: np.ndarray | float,
+        hwhm: float,
+    ) -> np.ndarray | float:
+        """Calculate integral over Lorentzian lineshape.
+
+        Parameters
+        ----------
+        x : (M,) np.ndarray | float
+            Energy variable.
+
+        Returns
+        -------
+        integral : (M,) np.ndarray | float
+            Integral over Lorentzian lineshape.
+        """
+
+        gamma = hwhm
+        integral = 0.5 + (1 / np.pi) * np.arctan(x / gamma)
+        return integral
 
 
 def is_nonnegative_float(input: float, label: str) -> float:
