@@ -1,10 +1,11 @@
 from .state import State
-from ..utils.types import (
+from ..utils import (
     LineShape,
     KappaMode,
     is_real_or_1darray,
     is_nonnegative_float,
 )
+from ..utils import decay_constant, lineshape_integral
 from typing import Optional, Sequence
 import numpy as np
 
@@ -352,7 +353,7 @@ class System:
         energy_arg += -self.reorg_shift
 
         # voltage dependend transition probability for charging
-        W_charging = self._lineshape.lineshape_integral(energy_arg, self.hwhm)
+        W_charging = lineshape_integral(self._lineshape, energy_arg, self.hwhm)
 
         # assert only charging transitions with dQ == +1 or -1 are non-zero
         W_charging *= np.abs(self.dQ) == 1
@@ -508,15 +509,15 @@ class System:
         """
 
         if kappa_mode is not None:
-            kappa_mode = KappaMode(kappa_mode).value
+            kappa_mode = KappaMode(kappa_mode)
         else:
-            kappa_mode = self.kappa_mode
+            kappa_mode = self._kappa_mode
 
         bias = is_real_or_1darray(bias, "bias")
 
         delta = -(self.dE + self.reorg_shift) * self.dQ
 
-        kappa = KappaMode(kappa_mode).kappa(bias, delta, self.workfunction)
+        kappa = decay_constant(kappa_mode, bias, delta, self.workfunction)
 
         if squeeze:
             kappa = np.squeeze(kappa)
