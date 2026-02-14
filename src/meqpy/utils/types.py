@@ -14,22 +14,6 @@ class ValidatedEnum(Enum):
         )
 
 
-class KappaMode(str, ValidatedEnum):
-    """Mode for calculating the kappa factor for tunneling decay rates"""
-
-    FAC10 = "10"
-    CONSTANT = "constant"
-    FULL = "full"
-
-
-class LineShape(str, ValidatedEnum):
-    """Line shape for transition rate derivative"""
-
-    GAUSS = "gaussian"
-    LOR = "lorentzian"
-    DIRAC = "dirac"
-
-
 def is_nonnegative_float(input: float, label: str) -> float:
     """Verify input is real number and not negative."""
     if not isinstance(input, Real):

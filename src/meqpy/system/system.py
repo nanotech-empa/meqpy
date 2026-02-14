@@ -1,8 +1,13 @@
 from .state import State
-from ..utils.types import LineShape, KappaMode, is_real_or_1darray, is_nonnegative_float
+from ..utils import (
+    LineShape,
+    KappaMode,
+    is_real_or_1darray,
+    is_nonnegative_float,
+)
+from ..utils import decay_constant, lineshape_integral
 from typing import Optional, Sequence
 import numpy as np
-from scipy.special import erf
 
 
 class System:
@@ -319,98 +324,44 @@ class System:
             mat[initial, final] = 1.0
         return mat
 
-    def dirac_lineshape_integral(self, x: np.ndarray | float) -> np.ndarray | float:
-        """Calculate integral over dirac peak (Heaviside function).
-
-        Parameters
-        ----------
-        x : (M,) np.ndarray | float
-            Energy variable.
-
-        Returns
-        -------
-        integral : (M,) np.ndarray | float
-            Integral over dirac peak (Heaviside function).
-        """
-
-        integral = 0.5 * (np.sign(x) + 1)
-        return integral
-
-    def gaussian_lineshape_integral(self, x: np.ndarray | float) -> np.ndarray | float:
-        """Calculate integral over Gaussian lineshape.
-
-        Parameters
-        ----------
-        x : (M,) np.ndarray | float
-            Energy variable.
-
-        Returns
-        -------
-        integral : (M,) np.ndarray | float
-            Integral over Gaussian lineshape.
-        """
-
-        sigma = self.hwhm / np.sqrt(2 * np.log(2))
-        integral = 0.5 * (erf(x / (np.sqrt(2) * sigma)) + 1)
-        return integral
-
-    def lorentzian_lineshape_integral(
-        self, x: np.ndarray | float
-    ) -> np.ndarray | float:
-        """Calculate integral over Lorentzian lineshape.
-
-        Parameters
-        ----------
-        x : (M,) np.ndarray | float
-            Energy variable.
-
-        Returns
-        -------
-        integral : (M,) np.ndarray | float
-            Integral over Lorentzian lineshape.
-        """
-
-        gamma = self.hwhm
-        integral = 0.5 + (1 / np.pi) * np.arctan(x / gamma)
-        return integral
-
-    def charging_transitions_normalized(self, V: float | np.ndarray) -> np.ndarray:
+    def normalized_charging_transitions(
+        self,
+        bias: float | np.ndarray,
+        squeeze: bool = True,
+    ) -> np.ndarray:
         """Calculate normalized charging transition rates between all states for given bias voltage(s).
 
         Parameters
         ----------
-        V : float | (M,) np.ndarray
+        bias : float | (M,) np.ndarray
             Bias voltage(s) in V.
+        squeeze : bool, optional
+                The returned array is squeezed to remove any dimensions of size 1, default is `True`.
 
         Returns
         -------
-        W_charging : (N,N) np.ndarray | (M,N,N) np.ndarray
-            Normalized charging transition rates matrix/matrices.
+        W_charging : (M,N,N) np.ndarray
+            Normalized charging transition rates matrix/matrices, with N being number of states in system.
+            The returned array is squeezed to remove any dimensions of size 1 if `squeeze` is `True`.
         """
 
-        dE = self.dE + self.reorg_shift
-        dQ = self.dQ
-
-        # select lineshape of transition rate derivative
-        if self.lineshape == "dirac" or self.hwhm == 0.0:
-            lineshape_integral = self.dirac_lineshape_integral
-        elif self.lineshape == "gaussian":
-            lineshape_integral = self.gaussian_lineshape_integral
-        elif self.lineshape == "lorentzian":
-            lineshape_integral = self.lorentzian_lineshape_integral
-
-        V = is_real_or_1darray(V, "V")  # make sure V is array of shape (M,)
+        # make sure V is array of shape (M,)
+        bias = is_real_or_1darray(bias, "bias")
 
         # offset voltages by energies of ion resonances --> shape (M,N,N)
-        energy_arg = -dE[None, ...] - dQ[None, ...] * V[..., None, None]
+        energy_arg = -self.dE[None, ...] - self.dQ[None, ...] * bias[:, None, None]
+        energy_arg += -self.reorg_shift
 
         # voltage dependend transition probability for charging
-        W_charging = lineshape_integral(energy_arg)
+        W_charging = lineshape_integral(self._lineshape, energy_arg, self.hwhm)
 
         # assert only charging transitions with dQ == +1 or -1 are non-zero
         W_charging *= np.abs(self.dQ) == 1
 
-        return np.squeeze(W_charging)
+        if squeeze:
+            W_charging = np.squeeze(W_charging)
+
+        return W_charging
 
     @property
     def clebsch_gordan_factors(self) -> np.ndarray:
@@ -434,6 +385,144 @@ class System:
         mi = multiplicities[None, :]
 
         return np.maximum(mf, mi) / mf
+
+    def charging_rates(
+        self,
+        z: float | np.ndarray,
+        bias: float | np.ndarray = 0.0,
+        kappa_mode: str = None,
+        squeeze: bool = True,
+    ) -> np.ndarray:
+        """Get transition rates by charging of system:
+        transition rate = coupling strength * normalized charging transition * Clebsch-Gordan factors
+
+        Parameters
+        ----------
+        z : float | (K,) np.ndarray
+            Distance between System and lead in Angstrom.
+        bias : float | (M,) np.ndarray, optional
+            Bias voltage(s) between system and lead in V, by default 0.0. Only used in case of kappa_mode='full'.
+        kappa_mode : str
+            Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
+        squeeze : bool, optional
+            The returned array is squeezed to remove any dimensions of size 1, default is `True`.
+
+        Returns
+        -------
+        charging_rates : (K,M,N,N) np.ndarray
+            Array containing transition rates by charging, with N being number of states in system.
+            The returned array is squeezed to remove any dimensions of size 1 if `squeeze` is `True`.
+
+        Notes
+        -----
+        This method is a simple wrapper for combining:
+            * `self.coupling_strength`
+            * `self.normalized_charging_transition`
+            * `self.clebsch_gordan_factors`
+        """
+
+        charging_rates = self.coupling_strength(
+            z, bias, kappa_mode=kappa_mode, squeeze=False
+        )
+        charging_rates *= self.normalized_charging_transitions(bias, squeeze=False)
+        charging_rates *= self.clebsch_gordan_factors
+
+        if squeeze:
+            charging_rates = np.squeeze(charging_rates)
+
+        return charging_rates
+
+    def coupling_strength(
+        self,
+        z: float | np.ndarray,
+        bias: float | np.ndarray = 0.0,
+        kappa_mode: str = None,
+        squeeze: bool = True,
+    ) -> np.ndarray:
+        """Calculate coupling strength between System and lead (e.g. sample or tip), assuming planar wave approximation:
+        - coupling strength = exp[ -2 * kappa * z].
+
+        Parameters
+        ----------
+        z : float | (K,) np.ndarray
+            Distance between System and lead in Angstrom.
+        bias : float | (M,) np.ndarray, optional
+            Bias voltage(s) between system and lead in V, by default 0.0. Only used in case of kappa_mode='full'.
+        kappa_mode : str
+            Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
+        squeeze : bool, optional
+                The returned array is squeezed to remove any dimensions of size 1, default is `True`.
+
+        Returns
+        -------
+        coupling_strength : (K,M,N,N) np.ndarray
+            Array containing coupling strength, with N being number of states in system.
+            The returned array is squeezed to remove any dimensions of size 1 if `squeeze` is `True`.
+
+        Notes
+        -----
+        The decay constant kappa is calculated based on the selected kappa_mode:
+            - '10': kappa = log(10)/2.0
+            - 'constant': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2 ) * 1e-10
+            - 'full': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * ( workfunction - deltaE + bias/2 )  / HBAR^2 ) * 1e-10
+        """
+
+        z = is_real_or_1darray(z, "z")
+        kappa_mat = self.kappa(bias, kappa_mode=kappa_mode, squeeze=False)
+        coupling_strength = np.exp(-2 * np.multiply.outer(z, kappa_mat))
+
+        if squeeze:
+            coupling_strength = np.squeeze(coupling_strength)
+
+        return coupling_strength
+
+    def kappa(
+        self,
+        bias: float | np.ndarray,
+        kappa_mode: str = None,
+        squeeze: bool = True,
+    ) -> np.ndarray:
+        """Calculate decay constant kappa for given energy difference(s) and bias voltage(s).
+
+        Parameters
+        ----------
+        bias : float | (M,) np.ndarray
+            Bias voltage or 1d array of bias voltages, in V. Only used in case of kappa_mode='full'.
+        kappa_mode: str
+            Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
+        squeeze: bool
+            The returned array is squeezed to remove any dimensions of size 1, default is `True`.
+
+        Returns
+        -------
+        kappa : (M,N,N) np.ndarray
+            Array containing kappa for each voltage and each pair of states, in 1/Angstrom, with N being number of states.
+            If bias is float, it is converted to arrays of length 1 for broadcasting.
+            The returned array is squeezed to remove any dimensions of size 1 if `squeeze` is `True`.
+
+        Notes
+        -----
+        The decay constant kappa is calculated based on the selected kappa_mode:
+            - '10': kappa = log(10)/2.0
+            - 'constant': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2)*1e-10
+            - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - deltaE + bias/2) / HBAR^2)*1e-10
+        """
+
+        if kappa_mode is not None:
+            kappa_mode = KappaMode(kappa_mode)
+        else:
+            kappa_mode = self._kappa_mode
+
+        bias = is_real_or_1darray(bias, "bias")
+
+        delta = -(self.dE + self.reorg_shift) * self.dQ
+
+        kappa = decay_constant(kappa_mode, bias, delta, self.workfunction)
+
+        if squeeze:
+            kappa = np.squeeze(kappa)
+
+        return kappa
 
     def __repr__(self):
         return f"System(name={self.name}, states={self.states})"
