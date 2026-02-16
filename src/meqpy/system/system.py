@@ -384,7 +384,7 @@ class System:
         mf = multiplicities[:, None]
         mi = multiplicities[None, :]
 
-        return np.maximum(mf, mi) / mf
+        return np.maximum(mf, mi) / mi
 
     def charging_rates(
         self,
