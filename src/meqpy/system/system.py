@@ -375,7 +375,7 @@ class System:
         Notes
         -----
         The Clebsch-Gordan factor for a transition from state i to state f is calculated as:
-            cg_factor(f,i) = max(mf,mi)/mf
+            cg_factor(f,i) = max(mf,mi)/mi
         with mi and mf being the multiplicities of the initial and final states, respectively.
         """
 
@@ -384,7 +384,7 @@ class System:
         mf = multiplicities[:, None]
         mi = multiplicities[None, :]
 
-        return np.maximum(mf, mi) / mf
+        return np.maximum(mf, mi) / mi
 
     def charging_rates(
         self,
