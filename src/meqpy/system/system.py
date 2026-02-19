@@ -31,7 +31,6 @@ class System:
         workfunction: float = 5.0,
         reorg_shift: float = 0.0,
         kappa_mode: KappaMode = KappaMode.FULL,
-        **kwargs,
     ):
         """Initialize System.
 
@@ -205,6 +204,10 @@ class System:
     def num_states(self) -> int:
         """Number of states in system"""
         return len(self.states)
+
+    @property
+    def shape(self) -> tuple[int]:
+        return (self.num_states, self.num_states)
 
     @property
     def energies(self) -> np.ndarray:
