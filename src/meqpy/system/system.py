@@ -8,6 +8,13 @@ from ..utils import (
 from ..utils import decay_constant, lineshape_integral
 from typing import Optional, Sequence
 import numpy as np
+import scipy.constants as const
+
+ELEMENTARY_CHARGE = const.elementary_charge  # C
+HBAR = const.hbar  # J·s
+G0 = ELEMENTARY_CHARGE / (
+    2 * np.pi * HBAR
+)  # Conductance quantum for each spin channel in 1/s
 
 
 class System:
@@ -440,7 +447,7 @@ class System:
         squeeze: bool = True,
     ) -> np.ndarray:
         """Calculate coupling strength between System and lead (e.g. sample or tip), assuming planar wave approximation:
-        - coupling strength = exp[ -2 * kappa * z].
+        - coupling strength = exp[ -2 * kappa * z] * G0, with G0 being conductance quantum rate e/h
 
         Parameters
         ----------
@@ -469,7 +476,7 @@ class System:
 
         z = is_real_or_1darray(z, "z")
         kappa_mat = self.kappa(bias, kappa_mode=kappa_mode, squeeze=False)
-        coupling_strength = np.exp(-2 * np.multiply.outer(z, kappa_mat))
+        coupling_strength = G0 * np.exp(-2 * np.multiply.outer(z, kappa_mat))
 
         if squeeze:
             coupling_strength = np.squeeze(coupling_strength)
