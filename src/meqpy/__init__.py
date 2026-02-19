@@ -6,6 +6,7 @@ __version__ = "0.0.1"
 
 from .system.system import System
 from .system.state import State
+from .system.dyson import Dyson
 from .io.cube import Cube, TBCube
 from .master_equation.equilibrium import (
     solve_equilibrium,
@@ -17,6 +18,7 @@ from .master_equation.measurement import measurement
 __all__ = [
     "System",
     "State",
+    "Dyson",
     "Cube",
     "TBCube",
     "solve_equilibrium",
