@@ -5,16 +5,32 @@ import os
 
 class Cube:
     """
-    Class to represent a gaussian cube file. It requires the filename of the cube to be read.
+    Class to represent a gaussian cube file. Prefer Cube.from_file() for normal use
     """
 
-    def __init__(self, filename: os.PathLike):
-        self.cube_data = VolumetricData.from_cube(filename)
+    def __init__(self, cube_data: VolumetricData):
+        self.cube_data = cube_data
         self.data = self.cube_data["total"]
         # Molecule Object from PyMatgen, which can be used to calculate the center of mass and other properties of the structure.
         self.molecule = Molecule(
             self.cube_data.structure.species, self.cube_data.structure.cart_coords
         )
+
+    def __repr__(self):
+        return f"Cube(atoms={len(self.molecule)}, grid={self.data.shape}, "
+
+    @classmethod
+    def from_file(cls, filename: os.PathLike) -> "Cube":
+        """
+        Read a Gaussian cube file and return a Cube instance.
+
+        Parameters
+        ----------
+        filename : path-like
+            Path to the .cube file.
+        """
+        cube_data = VolumetricData.from_cube(filename)
+        return cls(cube_data)
 
     @property
     def cart_coords(self):
