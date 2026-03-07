@@ -10,7 +10,7 @@ class Cube:
 
     def __init__(self, cube_data: VolumetricData):
         self.cube_data = cube_data
-        self.data = self.cube_data["total"]
+        self.data = self.cube_data.data["total"]
         # Molecule Object from PyMatgen, which can be used to calculate the center of mass and other properties of the structure.
         self.molecule = Molecule(
             self.cube_data.structure.species, self.cube_data.structure.cart_coords
@@ -40,12 +40,12 @@ class Cube:
     @property
     def elements(self):
         """Returns a list of the elements in the cube data."""
-        return [i.symbol for i in self.cube_data.structure.elements]
+        return [i.symbol for i in self.cube_data.structure.species]
 
     @property
     def masses(self):
         """Returns a list of the masses of the elements in the cube data."""
-        return [i.atomic_mass for i in self.cube_data.structure.elements]
+        return [i.atomic_mass for i in self.cube_data.structure.species]
 
     @property
     def structure(self):
@@ -56,7 +56,12 @@ class Cube:
     def molecule(self):
         """Returns the Pymatgen object Molecule of the cube data.
         Note: Molecule object has no periodicity. Useful for calculating molecule properties like center of mass, it will contain the coordinates and other properties of the atoms in the cube data."""
-        return self.molecule
+        return self._molecule
+
+    @molecule.setter
+    def molecule(self, value):
+        """Sets the molecule property of the cube data."""
+        self._molecule = value
 
     @property
     def center_of_mass(self):

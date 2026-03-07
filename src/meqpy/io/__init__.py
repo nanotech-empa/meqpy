@@ -1,3 +1,3 @@
-from .cube import CubeGrid
+from .cube import Cube
 
-__all__ = ["CubeGrid"]
+__all__ = ["Cube"]
