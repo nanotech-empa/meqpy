@@ -84,11 +84,11 @@ class Cube:
         axis : int Axis normal to the plane of the slice (0 for x, 1 for y, 2 for z).
         distance : float Position along the axis.
         """
-        lenght = self.structure.lattice.abc[axis]
+        length = self.structure.lattice.abc[axis]
 
-        if not (0 <= distance <= lenght):
+        if not (0 <= distance <= length):
             raise ValueError(
-                f"Distance must be between 0 and {lenght} along the specified axis."
+                f"Distance must be between 0 and {length} along the specified axis."
             )
 
         # Find the closest index in the grid to the specified distance
