@@ -1,5 +1,6 @@
 from pymatgen.io.common import VolumetricData
 from pymatgen.core.structure import Molecule
+import numpy as np
 import os
 
 
@@ -68,24 +69,33 @@ class Cube:
         """Returns the center of mass of the Structure:"""
         return self.molecule.center_of_mass
 
-    def linear_slice(self, p1, p2, n=100):
-        """
-        Returns a linear slice of the cube data between two points p1 and p2. The number of points in the slice can be specified with n.
-        p1 and p2 list of fractional coordinates.
-        """
-        return self.cube_data.get_linear_slice(p1, p2, n)
-
-    def get_average_along_axis(self, axis=0):
-        """
-        Returns the average of the cube data along a specified axis. The default is 0, which corresponds to the x-axis.
-        """
-        return self.cube_data.get_average_along_axis(axis)
-
     def get_axis_grid(self, axis=0):
         """
         Returns the grid points along a specified axis. The default is 0, which corresponds to the x-axis.
         """
         return self.cube_data.get_axis_grid(axis)
+
+    def get_slide_data(self, axis: int = 2, distance: float = 0.5):
+        """
+        Return a 2D slice of the volumetric cube data along a given axis.
+
+        Parameters
+        ----------
+        axis : int Axis normal to the plane of the slice (0 for x, 1 for y, 2 for z).
+        distance : float Position along the axis.
+        """
+        lenght = self.structure.lattice.abc[axis]
+
+        if not (0 <= distance <= lenght):
+            raise ValueError(
+                f"Distance must be between 0 and {lenght} along the specified axis."
+            )
+
+        # Find the closest index in the grid to the specified distance
+        grid = self.get_axis_grid(axis)
+        plane_index = np.searchsorted(grid, distance)
+
+        return np.take(self.data, plane_index, axis=axis)
 
     def dim(self):
         """Returns the dimensions of the cube data."""

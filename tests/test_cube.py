@@ -41,3 +41,20 @@ def test_from_file(sample_cube):
         20,
     )  # We use a dummy cube file with a 20x20x20 grid for testing
     assert len(cube.molecule) == 4
+
+
+def test_get_slice(sample_volumetricdata):
+    cube = Cube(sample_volumetricdata)
+    # Test getting a slice along the x-axis at a distance of 5.0
+    slice_x = cube.get_slide_data(axis=0, distance=5.0)
+    assert slice_x.shape == (10, 10)  # The slice should be 2D with shape (10, 10)
+
+    # Test distance exceeding the lattice parameter
+    try:
+        cube.get_slide_data(axis=0, distance=15.0)
+    except ValueError as e:
+        length = cube.structure.lattice.abc[0]
+        assert (
+            str(e)
+            == f"Distance must be between 0 and {length} along the specified axis."
+        )
