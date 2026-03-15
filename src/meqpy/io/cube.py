@@ -54,6 +54,8 @@ class Cube:
         Args:
             ind (int): Axis index.
         """
+        if axis not in [0, 1, 2]:
+            raise ValueError("Axis must be 0, 1, or 2.")
         ng = self.data.shape
         num_pts = ng[axis]
         lengths = self.atoms.cell.cellpar()[:3]
@@ -68,6 +70,8 @@ class Cube:
         axis : int Axis normal to the plane of the slice (0 for x, 1 for y, 2 for z).
         distance : float Position along the axis.
         """
+        if axis not in [0, 1, 2]:
+            raise ValueError("Axis must be 0, 1, or 2.")
         length = self.atoms.cell.cellpar()[:3][axis]
 
         if not (0 <= distance <= length):
