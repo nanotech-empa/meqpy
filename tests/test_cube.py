@@ -25,15 +25,15 @@ def test_from_file(sample_cube):
 def test_get_slice(sample_cube):
     cube = Cube(sample_cube)
     # Test getting a slice along the x-axis at a distance of 5.0
-    slice_x = cube.get_slide_data(axis=0, distance=5.0)
+    slice_x = cube.get_slice_data(axis=0, distance=5.0)
     assert slice_x.shape == (20, 20)  # The slice should be 2D with shape (20, 20)
 
     # Test distance exceeding the lattice parameter
     try:
-        cube.get_slide_data(axis=0, distance=15.0)
+        cube.get_slice_data(axis=0, distance=15.0)
     except ValueError as e:
-        length = cube.atoms.cell.cellpar()[0]
+        grid = cube.get_axis_grid(0)
         assert (
             str(e)
-            == f"Distance must be between 0 and {length} along the specified axis."
+            == f"Distance must be between {grid[0]} and {grid[-1]} along axis {0}."
         )
