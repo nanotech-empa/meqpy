@@ -1,11 +1,12 @@
 from ase.io.cube import read_cube
 import numpy as np
 import os
+from ase.units import Bohr
 
 
 class Cube:
     """
-    Class to represent a gaussian cube file. Prefer Cube.from_file() for normal use
+    Class to represent a gaussian cube file.
     """
 
     def __init__(self, filename: os.PathLike):
@@ -61,14 +62,21 @@ class Cube:
         lengths = self.atoms.cell.cellpar()[:3]
         return [i / num_pts * lengths[axis] for i in range(num_pts)]
 
-    def get_slide_data(self, axis: int = 2, distance: float = 0.5):
+    @property
+    def magsqr(self):
+        """Returns the magnitude squared of the cube data."""
+        spacings = np.linalg.norm(self.spacing, axis=1)
+        voxel_size = np.prod(spacings) / Bohr**3
+        return np.sum(self.data**2) * voxel_size
+
+    def get_slice_data(self, distance: float, axis: int = 2) -> np.ndarray:
         """
         Return a 2D slice of the volumetric cube data along a given axis.
 
         Parameters
         ----------
-        axis : int Axis normal to the plane of the slice (0 for x, 1 for y, 2 for z).
         distance : float Position along the axis.
+        axis : int Axis normal to the plane of the slice (0 for x, 1 for y, 2 for z).
         """
         if axis not in [0, 1, 2]:
             raise ValueError("Axis must be 0, 1, or 2.")
@@ -80,8 +88,8 @@ class Cube:
             )
 
         # Find the closest index in the grid to the specified distance
-        grid = self.get_axis_grid(axis)
-        plane_index = np.searchsorted(grid, distance)
+        grid = np.array(self.get_axis_grid(axis))
+        plane_index = np.argmin(np.abs(grid - distance))
 
         return np.take(self.data, plane_index, axis=axis)
 
