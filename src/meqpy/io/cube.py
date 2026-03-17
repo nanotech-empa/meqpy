@@ -12,17 +12,22 @@ class Cube:
     def __init__(self, filename: os.PathLike):
         cube_data = read_cube(file_obj=open(filename, "r"))
         self.data = cube_data["data"]
-        self.atoms = cube_data["atoms"]
+        self.original_atoms = cube_data["atoms"]
         self.origin = cube_data["origin"]
         self.spacing = cube_data["spacing"]
+
+        # Shift the atomic positions to be relative to the origin of the cube
+        shifted_atoms = self.original_atoms.copy()
+        shifted_atoms.positions -= self.origin
+        self.atoms = shifted_atoms
 
     def __repr__(self):
         return f"Cube(atoms={len(self.atoms)}, grid={self.data.shape}, "
 
     @property
     def cart_coords(self):
-        """Returns the cartesian coordinates of the cube data."""
-        return self.atoms.positions - self.origin
+        """Returns the cartesian coordinates inside the cell."""
+        return self.atoms.positions
 
     @property
     def elements(self):
@@ -36,18 +41,19 @@ class Cube:
 
     @property
     def atoms(self):
-        """Returns the ASE Atoms object."""
+        """Returns the ASE Atoms object inside the cell."""
         return self._atoms
 
     @atoms.setter
     def atoms(self, value):
-        """Sets the atoms property of the cube data."""
+        """The setter: allows assignment to self.atoms."""
+        # You can even add validation here if you want
         self._atoms = value
 
     @property
     def center_of_mass(self):
         """Returns the center of mass of the Structure:"""
-        return self.atoms.get_center_of_mass() - self.origin
+        return self.atoms.get_center_of_mass()
 
     def get_axis_grid(self, axis=0):
         """Get the grid for a particular axis.
@@ -92,7 +98,3 @@ class Cube:
         plane_index = np.argmin(np.abs(grid - distance))
 
         return np.take(self.data, plane_index, axis=axis)
-
-    def dim(self):
-        """Returns the dimensions of the cube data."""
-        return self.data.shape
