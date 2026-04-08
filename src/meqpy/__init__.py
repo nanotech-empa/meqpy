@@ -4,6 +4,7 @@ meqpy: A modular Python framework for defining systems and solving master equati
 
 __version__ = "0.0.1"
 
+from .io import Cube, Cube_2pz
 from .system.system import System
 from .system.state import State
 from .master_equation.equilibrium import (
@@ -21,4 +22,6 @@ __all__ = [
     "solve_equilibrium_nd",
     "fill_diagonal",
     "measurement",
+    "Cube",
+    "Cube_2pz",
 ]
