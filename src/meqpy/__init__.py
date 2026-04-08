@@ -6,6 +6,8 @@ __version__ = "0.0.1"
 
 from .system.system import System
 from .system.state import State
+from .system.transition import Transition
+from .system.dyson import Dyson
 from .master_equation.equilibrium import (
     solve_equilibrium,
     solve_equilibrium_nd,
@@ -17,6 +19,7 @@ __all__ = [
     "System",
     "State",
     "Transition",
+    "Dyson",
     "solve_equilibrium",
     "solve_equilibrium_nd",
     "fill_diagonal",
