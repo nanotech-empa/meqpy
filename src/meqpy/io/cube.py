@@ -1,12 +1,13 @@
 from ase.io.cube import read_cube
 import numpy as np
 import os
-from ase.units import Bohr
+from ase.units import Bohr, _hbar, _me, _e
 
 
 def _pad_lin_extrapolate(vector: np.ndarray, pad_width: tuple, iaxis: int, kwargs):
     """Function for `np.pad()` to extrapolate linearly (see numpy docs).
     EXAMPLE: `x_padded = np.pad(x, pad_width, pad_lin_extrapolate)`
+    """
     dd = vector[pad_width[0] + 1] - vector[pad_width[0]]
     vector[: pad_width[0]] = (
         vector[pad_width[0]] - (pad_width[0] - np.arange(pad_width[0])) * dd
@@ -14,6 +15,7 @@ def _pad_lin_extrapolate(vector: np.ndarray, pad_width: tuple, iaxis: int, kwarg
     vector[-pad_width[1] :] = (
         vector[-pad_width[1] - 1] + (np.arange(pad_width[1]) + 1) * dd
     )
+
 
 class Cube:
     """
@@ -109,7 +111,7 @@ class Cube:
         plane_index = np.argmin(np.abs(grid - distance))
 
         return np.take(self.data, plane_index, axis=axis)
-        
+
     def extrapolate_wavefunction(
         self,
         tip_height: float = 7.0,
@@ -132,7 +134,7 @@ class Cube:
             )
         else:
             return self.integration_plane(cut_off_height, MO=MO, pad=pad, axis=axis)
-                
+
     def extrapolate_WF(
         self,
         z: float = 7.0,
@@ -178,43 +180,42 @@ class Cube:
         )
         kx_grid, ky_grid = np.meshgrid(kx_arr, ky_arr, indexing="ij")
 
-        fac = 2 * ELECTRON_MASS * ELEMENTARY_CHARGE / HBAR**2 * 1e-20
+        fac = 2 * _me * _e / _hbar**2 * 1e-20
         kappa = np.sqrt(kx_grid**2 + ky_grid**2 + fac * workfunction)
 
         dz = abs(z - cut_off_height)
         return np.fft.irfft2(fourier * np.exp(-kappa * dz), morb_plane.shape)
-       
-  def integration_plane(
-      self,
-      z: float = 1.5,
-      MO: int = None,
-      pad: int = 0,
-      axis: int = 2,
-  ) -> np.ndarray:
-      """Return xy slice of cube at height plane.
 
-      :param z: Height of plane in Angstrom, defaults to 1.5
-      :type z: float, optional
-      :param MO: Index of molecular orbital, in case of multi-orbital cube, defaults to None
-      :type MO: int, optional
-      :param pad: Pad map with with number of zeros in both axis, defaults to 0
-      :type pad: int, optional
-      :return: 2d array
-      :rtype: np.ndarray
-      """
-      assert self._ax_is_perp(axis), "z is not perpendicular to xy plane."
-      plane_idx = np.searchsorted(
-          self._cartesian_axis(axis), z
-      )  # make sure this works also for reversed z-axes
+    def integration_plane(
+        self,
+        z: float = 1.5,
+        MO: int = None,
+        pad: int = 0,
+        axis: int = 2,
+    ) -> np.ndarray:
+        """Return xy slice of cube at height plane.
 
-      assert self._cartesian_axis(axis)[plane_idx] - z <= np.linalg.norm(
-          self.vecs[axis]
-      ), "Height of integration plane not within z-range of cube data."
+        :param z: Height of plane in Angstrom, defaults to 1.5
+        :type z: float, optional
+        :param MO: Index of molecular orbital, in case of multi-orbital cube, defaults to None
+        :type MO: int, optional
+        :param pad: Pad map with with number of zeros in both axis, defaults to 0
+        :type pad: int, optional
+        :return: 2d array
+        :rtype: np.ndarray
+        """
+        assert self._ax_is_perp(axis), "z is not perpendicular to xy plane."
+        plane_idx = np.searchsorted(
+            self._cartesian_axis(axis), z
+        )  # make sure this works also for reversed z-axes
 
-      if self.data.ndim == 3 and MO == 0:
-          MO = None
-      padding = ((pad, pad), (pad, pad))
+        assert self._cartesian_axis(axis)[plane_idx] - z <= np.linalg.norm(
+            self.vecs[axis]
+        ), "Height of integration plane not within z-range of cube data."
 
-      morb = np.moveaxis(self.data, axis, 0)[plane_idx : plane_idx + 1, :, :, MO]
-      return np.pad(np.squeeze(morb), padding)
+        if self.data.ndim == 3 and MO == 0:
+            MO = None
+        padding = ((pad, pad), (pad, pad))
 
+        morb = np.moveaxis(self.data, axis, 0)[plane_idx : plane_idx + 1, :, :, MO]
+        return np.pad(np.squeeze(morb), padding)
