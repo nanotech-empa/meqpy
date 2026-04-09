@@ -43,6 +43,9 @@ class Dyson(Transition):
         self.spacing = None
         """Spacing of cube data points."""
 
+        self.amplitude = None
+        """Amplitude (magnitude squared) of Dyson orbital."""
+
         self.x = None
         """x values of cube data points."""
 
@@ -96,6 +99,8 @@ class Dyson(Transition):
         self.spacing = self.spacing[:2]
 
         self.x, self.y = self.grid
+
+        self.amplitude = cube.magsqr
 
         # switch to cube box coordinate system
         if center_mass:
