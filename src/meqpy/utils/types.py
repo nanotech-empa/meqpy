@@ -1,5 +1,6 @@
 from enum import Enum
 from numbers import Real
+from typing import Sequence
 import numpy as np
 
 
@@ -23,7 +24,7 @@ def is_nonnegative_float(input: float, label: str) -> float:
     return float(input)
 
 
-def is_real_or_1darray(value, name: str):
+def is_real_or_1darray(value, name: str) -> np.ndarray:
     """Check if value is real or np.ndarray of dimension 1, and convert to np.ndarray if it is real.
 
     Parameters
@@ -65,8 +66,9 @@ def is_real_or_1darray(value, name: str):
     return value
 
 
-def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None):
-    """Raise error if array is not np.ndarray with last two dimesions of equal length.
+def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None) -> bool:
+    """Raise error if array is not np.ndarray with last two dimensions of equal length.
+    Optional: check if array is of dimension dims.
 
     Parameters
     ----------
@@ -76,6 +78,12 @@ def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None):
         Name of parameter to be used in error messages.
     dims : int, optional
         Check for given number of dimensions, by default None
+
+    Returns
+    -------
+    bool
+        True if array is np.ndarray with last two dimensions of equal length and of dimension dims if given.
+
 
     Raises
     ------
@@ -97,3 +105,81 @@ def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None):
         raise ValueError(
             f"Last two dimensions of {name} must be a square matrix, but got array with shape {array.shape}."
         )
+
+    return True
+
+
+def is_sequence_of_pairs(sequence: Sequence, val_type: type, name: str) -> bool:
+    """Check if input is a Sequence of pairs, each containing two elements of type val_type.
+
+    Parameters
+    ----------
+    sequence : Sequence
+        Input sequence to check.
+    val_type : type
+        Type of elements within pairs.
+    name : str
+        Name of sequence object, used for raising errors.
+
+    Returns
+    -------
+    bool
+        True if sequence is a Sequence of pairs, each containing two elements of type val_type.
+
+    Raises
+    ------
+    TypeError
+        If sequence is not a Sequence
+    """
+    if not isinstance(sequence, Sequence):
+        raise TypeError(f"{name} must be Sequence, but got {type(sequence)}.")
+
+    for pair in sequence:
+        is_pair(pair, val_type, name=f"pair in {name}")
+
+    return True
+
+
+def is_pair(pair: Sequence, val_type: type, name: str) -> bool:
+    """Check if pair is a Sequence of length 2, with each element being of type val_type
+
+    Parameters
+    ----------
+    pair : Sequence
+        Input sequence to check.
+    val_type : type
+        Type of elements within pairs.
+    name : str
+        Name of sequence object, used for raising errors.
+
+
+    Returns
+    -------
+    bool
+        True if pair is a Sequence of length 2, with each element being of type val_type
+
+    Raises
+    ------
+    TypeError
+        Input sequence is not of type Sequence.
+    IndexError
+        Input sequence is not of length 2.
+    TypeError
+        Elements in sequence are not of type val_type.
+    """
+    if not isinstance(pair, Sequence):
+        raise TypeError(f"{name} must be Sequence, but got {type(pair)}.")
+
+    if len(pair) != 2:
+        raise IndexError(
+            f"{name} must be Sequence of length 2, "
+            f"but got object of length {len(pair)}."
+        )
+
+    for value in pair:
+        if not isinstance(value, val_type):
+            raise TypeError(
+                f"Elements in {name} must be {val_type}, but got {type(value)}"
+            )
+
+    return True
