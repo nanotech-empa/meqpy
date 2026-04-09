@@ -149,17 +149,12 @@ class Molecule(System):
         if not len(self._dyson_dict):
             return ()
 
-        # pick random dyson orbital as reference
-        keys = list(self._dyson_dict.keys())
-        key = keys.pop(0)
-        shape = self._dyson_dict[key].shape
+        shapes = {dyson.shape for dyson in self._dyson_dict.values()}
 
-        # check all other dyson orbitals have same shape
-        for key in keys:
-            if shape != self._dyson_dict[key].shape:
-                raise ValueError("Dysons do not have same shape.")
+        if len(shapes) != 1:
+            raise ValueError("Dysons do not have same shape.")
 
-        return shape
+        return shapes.pop()
 
     @property
     def shape(self) -> tuple[int, int, int, int]:
@@ -280,35 +275,22 @@ class Molecule(System):
 
         return ax
 
-    def get_x_padded(self, pad: int = 0) -> np.ndarray:
+    def get_axis_padded(self, axis: str, pad: int = 0) -> np.ndarray:
         """Array containing values of x-axis, extrapolated on both ends.
 
         Parameters
         ----------
+        axis : str
+            Axis to return, must be "x" or "y".
         pad : int, optional
             Number of points to be added on both ends, by default 0
 
         Returns
         -------
         np.ndarray
-            1d array containing values along x-axis of Dyson orbitals, linearily extrapolated on both ends by `pad` points.
+            1d array containing values along axis of Dyson orbitals, linearily extrapolated on both ends by `pad` points.
         """
-        return pad_lin_extrapolate(self.x, pad)
-
-    def get_y_padded(self, pad: int = 0) -> np.ndarray:
-        """Array containing values of y-axis, extrapolated on both ends.
-
-        Parameters
-        ----------
-        pad : int, optional
-            Number of points to be added on both ends, by default 0
-
-        Returns
-        -------
-        np.ndarray
-            1d array containing values along y-axis of Dyson orbitals, linearily extrapolated on both ends by `pad` points.
-        """
-        return pad_lin_extrapolate(self.y, pad)
+        return pad_lin_extrapolate(self._axis(axis), pad)
 
     def get_indices(self, xy_pairs: Sequence) -> list[tuple[int, int]]:
         """Translate coordinates of points in xy-plane to indices for existing Dyson orbitals.
