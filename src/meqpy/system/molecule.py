@@ -32,7 +32,7 @@ class Molecule(System):
             Keyword arguments for System class."""
         super().__init__(**kwargs)
 
-        self._dysons = {}
+        self._dyson_dict = {}
         self._tip_radius = tip_radius
         """Radius of s-wave tip in Angstrom"""
 
@@ -72,7 +72,7 @@ class Molecule(System):
             raise ValueError("States must differ in charge by 1.")
 
         key = self._state_tuple(a, b)
-        self._dysons[key] = dyson
+        self._dyson_dict[key] = dyson
 
     def _state_tuple(self, a: str | int, b: str | int) -> tuple[str, str]:
         """Create normed tuple for two states, to be used as key in `Molecule.dysons`.
@@ -120,13 +120,13 @@ class Molecule(System):
         return abs(dQ) == 1
 
     @property
-    def dysons(self) -> dict[tuple[str, str], Dyson]:
+    def dyson_dict(self) -> dict[tuple[str, str], Dyson]:
         """Dictionary containing Dyson objects for charging transitions."""
         # should we use copy here? otherwise it is easy to accidentally change it
-        return self._dysons.copy()
+        return self._dyson_dict.copy()
 
-    @dysons.setter
-    def dysons(self, dysons: dict[tuple[str, str], Dyson]):
+    @dyson_dict.setter
+    def dyson_dict(self, dysons: dict[tuple[str, str], Dyson]):
         if not isinstance(dysons, dict):
             raise TypeError(f"dysons must be dictionary but got {type(Dyson)}")
 
@@ -146,17 +146,17 @@ class Molecule(System):
     @property
     def dyson_shape(self) -> tuple[int, int]:
         """Shape of Dyson orbitals."""
-        if not len(self._dysons):
+        if not len(self._dyson_dict):
             return ()
 
         # pick random dyson orbital as reference
-        keys = list(self._dysons.keys())
+        keys = list(self._dyson_dict.keys())
         key = keys.pop(0)
-        shape = self._dysons[key].shape
+        shape = self._dyson_dict[key].shape
 
         # check all other dyson orbitals have same shape
         for key in keys:
-            if shape != self._dysons[key].shape:
+            if shape != self._dyson_dict[key].shape:
                 raise ValueError("Dysons do not have same shape.")
 
         return shape
@@ -176,7 +176,7 @@ class Molecule(System):
             2d matrix containing amplitudes for each transition.
         """
         amps = np.zeros_like(self.dE)
-        for key, dyson in self._dysons.items():
+        for key, dyson in self._dyson_dict.items():
             amps += self.matrix_by_states(*key, symmetric=True) * dyson.amplitude
         return amps
 
@@ -191,8 +191,8 @@ class Molecule(System):
             f, i = transition
             possible_keys.add(self._state_tuple(f, i))
 
-        # remove all keys found in self.dysons and return missing rest
-        for key in self.dysons.keys():
+        # remove all keys found in self.dyson_dict and return missing rest
+        for key in self.dyson_dict.keys():
             possible_keys.remove(key)
 
         return possible_keys
@@ -258,7 +258,7 @@ class Molecule(System):
         ValueError
             If axes of Dyson orbitals are not consistent.
         """
-        if not len(self._dysons.keys()):
+        if not len(self._dyson_dict.keys()):
             return None
 
         if not isinstance(axis, str):
@@ -268,19 +268,19 @@ class Molecule(System):
             raise ValueError(f"axis must be 'x' or 'y' but got {axis}")
 
         # pick random dyson orbital as reference
-        keys = list(self._dysons.keys())
+        keys = list(self._dyson_dict.keys())
         key = keys.pop(0)
-        ax = getattr(self._dysons[key], axis)
+        ax = getattr(self._dyson_dict[key], axis)
 
         # check all remaining dysons have the same axis values
         for key in keys:
-            axi = getattr(self._dysons[key], axis)
+            axi = getattr(self._dyson_dict[key], axis)
             if len(ax) != len(axi) or (ax != axi).any():
                 raise ValueError(f"{axis} is not the same for all dysons.")
 
         return ax
 
-    def x_padded(self, pad: int = 0) -> np.ndarray:
+    def get_x_padded(self, pad: int = 0) -> np.ndarray:
         """Array containing values of x-axis, extrapolated on both ends.
 
         Parameters
@@ -295,7 +295,7 @@ class Molecule(System):
         """
         return pad_lin_extrapolate(self.x, pad)
 
-    def y_padded(self, pad: int = 0) -> np.ndarray:
+    def get_y_padded(self, pad: int = 0) -> np.ndarray:
         """Array containing values of y-axis, extrapolated on both ends.
 
         Parameters
@@ -395,14 +395,14 @@ class Molecule(System):
                 f"scale_by_dyson must be bool, but got {type(scale_by_dyson)}"
             )
 
-        charging_rates = super().charging_rates(z, bias, kappa_mode, squeeze=False)
+        charging_rates_mat = super().charging_rates(z, bias, kappa_mode, squeeze=False)
         if scale_by_dyson:
-            charging_rates *= self.dyson_amplitudes
+            charging_rates_mat *= self.dyson_amplitudes
 
         if squeeze:
-            charging_rates = np.squeeze(charging_rates)
+            charging_rates_mat = np.squeeze(charging_rates_mat)
 
-        return charging_rates
+        return charging_rates_mat
 
     def charging_rates_dyson(
         self,
@@ -625,7 +625,7 @@ class Molecule(System):
         coupling_strength_mat = np.zeros(out_shape)
 
         # fill array:
-        for key, dyson in self._dysons.items():
+        for key, dyson in self._dyson_dict.items():
             a, b = self.dyson_key_to_indices(key)
 
             kappa_ab = kappa_mat[..., a, b]
