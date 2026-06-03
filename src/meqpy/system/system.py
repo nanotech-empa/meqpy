@@ -31,6 +31,7 @@ class System:
         workfunction: float = 5.0,
         reorg_shift: float = 0.0,
         kappa_mode: KappaMode = KappaMode.FULL,
+        spin_selection_rule: bool = True,
     ):
         """Initialize System.
 
@@ -53,6 +54,8 @@ class System:
             - '10' : decay by a factor of 0.1 per Angstrom
             - 'constant' : decay through rectangular potential barrier with height given by workfunction
             - 'full' (default) : decay through rectangular potential barrier depending on workfunction, bias voltage and energy of states
+        spin_selection_rule: bool, optional
+            Consider only charge transitions with multiplicity change of ΔM=±1, by default True.
         """
         self.name = name if name is not None else self.__class__.__name__
 
@@ -63,6 +66,7 @@ class System:
         self.workfunction = workfunction
         self.reorg_shift = reorg_shift
         self.kappa_mode = kappa_mode
+        self.spin_selection_rule = spin_selection_rule
 
     @property
     def states(self) -> list[State]:
@@ -151,6 +155,19 @@ class System:
         else:
             self._states.pop(position)
             self._states.insert(position, state)
+
+    @property
+    def spin_selection_rule(self) -> bool:
+        """Consider only charge transitions with ΔM=±1."""
+        return self._spin_selection_rule
+
+    @spin_selection_rule.setter
+    def spin_selection_rule(self, spin_selection_rule: bool):
+        if not isinstance(spin_selection_rule, bool):
+            raise TypeError(
+                f"spin_selection_rule must be bool, but got type {type(spin_selection_rule)}"
+            )
+        self._spin_selection_rule = spin_selection_rule
 
     def get_state(self, label: str | int) -> State:
         """Get State object for given label or index.
@@ -267,6 +284,18 @@ class System:
         return self.charges[:, None] - self.charges[None, :]
 
     @property
+    def dM(self) -> np.ndarray:
+        """Multiplicity difference matrix of states in system.
+
+        Returns
+        -------
+        dM : (N,N) np.ndarray
+            2d Matrix containing multiplicity differences of all states
+            with dM[f,i] = M_f - M_i
+        """
+        return self.multiplicities[:, None] - self.multiplicities[None, :]
+
+    @property
     def zeros(self) -> np.ndarray:
         """Return square numpy array, filled with zeros.
 
@@ -367,6 +396,10 @@ class System:
 
         # assert only charging transitions with dQ == +1 or -1 are non-zero
         W_charging *= np.abs(self.dQ) == 1
+
+        # assert only charging transitions with dM == +1 or -1 are non-zero
+        if self.spin_selection_rule:
+            W_charging *= np.abs(self.dM) == 1
 
         if squeeze:
             W_charging = np.squeeze(W_charging)
