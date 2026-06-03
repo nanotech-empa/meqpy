@@ -189,10 +189,11 @@ class Molecule(System):
         """Return set of all possible charging transitions without assigned Dyson object."""
 
         # keys for all possible charging transitions
-        possible_keys = set({})
-        for f, i in np.ndindex(self.ones.shape):
-            if self._valid_charging_pair(f, i):
-                possible_keys.add(self._state_tuple(f, i))
+        possible_keys = {
+            self._state_tuple(f, i)
+            for f, i in np.ndindex(self.ones.shape)
+            if self._valid_charging_pair(f, i)
+        }
 
         # remove all keys found in self.dyson_dict and return missing rest
         for key in self.dyson_dict.keys():
