@@ -189,10 +189,6 @@ class Molecule(System):
         """Return set of all possible charging transitions without assigned Dyson object."""
 
         # keys for all possible charging transitions
-        # selection_rules = abs(self.dQ) == 1
-        # if self.spin_selection_rule:
-        #     selection_rules *= abs(self.dM) == 1
-        # possible_transitions = np.argwhere(selection_rules).astype(int)
         possible_keys = set({})
         for f, i in np.ndindex(self.ones.shape):
             if self._valid_charging_pair(f, i):
