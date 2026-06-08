@@ -41,7 +41,7 @@ class Dyson(Transition):
         """Axis grid of cube."""
 
         self.spacing = None
-        """Spacing of cube data points."""
+        """Spacing of cube data points in Angstrom."""
 
         self.amplitude = None
         """Amplitude (magnitude squared) of Dyson orbital."""
@@ -168,6 +168,7 @@ class Dyson(Transition):
 
         padding = ((pad, pad), (pad, pad))
         wf_slice = np.pad(self.wf_slice, padding)
+        n1, n2 = wf_slice.shape
 
         height = is_real_or_1darray(height, "height")
         dz = abs(height - self.slice_height)
@@ -177,13 +178,18 @@ class Dyson(Transition):
         # https://github.com/nanotech-empa/cp2k-spm-tools/blob/main/cp2k_spm_tools/cp2k_grid_orbitals.py
         #
         fourier = np.fft.rfft2(wf_slice)
-        kx_arr = 2 * np.pi * np.fft.fftfreq(wf_slice.shape[0], self.spacing[0])
-        ky_arr = 2 * np.pi * np.fft.rfftfreq(wf_slice.shape[1], self.spacing[1])
 
-        kx2 = kx_arr[:, None] ** 2
-        ky2 = ky_arr[None, :] ** 2
+        # Build the in-plane reciprocal basis
+        b1, b2 = 2 * np.pi * np.linalg.inv(self.spacing[:, :2]).T
 
-        kappa_xy = np.sqrt(kx2 + ky2 + kappa[..., None, None] ** 2)
+        i = np.fft.fftfreq(n1)
+        j = np.fft.rfftfreq(n2)
+
+        # Cartesian wavevector at each FFT bin
+        kx = i[:, None] * b1[0] + j[None, :] * b2[0]
+        ky = i[:, None] * b1[1] + j[None, :] * b2[1]
+
+        kappa_xy = np.sqrt(kx**2 + ky**2 + kappa[..., None, None] ** 2)
         decay = np.exp(-np.multiply.outer(dz, kappa_xy))
 
         wf_extrapolated = np.fft.irfft2(fourier * decay, wf_slice.shape)
