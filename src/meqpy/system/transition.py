@@ -28,7 +28,10 @@ class Transition:
         """Axis grid of cube."""
 
         self.spacing = None
-        """Spacing of cube data points."""
+        """Spacing of cube data points in Angstrom."""
+
+        self.steps = None
+        """Stepsize between each points in Angstrom"""
 
         cube = self.file_to_cube(cube)
         self.parse_cube_dimensions(cube, center_mass, axis)
@@ -104,4 +107,5 @@ class Transition:
 
             self.grid.append(grid)
 
-        self.spacing = [np.linalg.norm(cube.spacing[axis]) for axis in self.axes]
+        self.steps = [np.linalg.norm(cube.spacing[axis]) for axis in self.axes]
+        self.spacing = cube.spacing[axis]

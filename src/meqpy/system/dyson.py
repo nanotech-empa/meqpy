@@ -41,7 +41,10 @@ class Dyson(Transition):
         """Axis grid of cube."""
 
         self.spacing = None
-        """Spacing of cube data points."""
+        """Spacing of cube data points in Angstrom."""
+
+        self.steps = None
+        """Stepsize between each points in Angstrom"""
 
         self.amplitude = None
         """Amplitude (magnitude squared) of Dyson orbital."""
@@ -97,6 +100,7 @@ class Dyson(Transition):
 
         self.grid = self.grid[:2]
         self.spacing = self.spacing[:2]
+        self.steps = self.steps[:2]
 
         self.x, self.y = self.grid
 
@@ -177,8 +181,8 @@ class Dyson(Transition):
         # https://github.com/nanotech-empa/cp2k-spm-tools/blob/main/cp2k_spm_tools/cp2k_grid_orbitals.py
         #
         fourier = np.fft.rfft2(wf_slice)
-        kx_arr = 2 * np.pi * np.fft.fftfreq(wf_slice.shape[0], self.spacing[0])
-        ky_arr = 2 * np.pi * np.fft.rfftfreq(wf_slice.shape[1], self.spacing[1])
+        kx_arr = 2 * np.pi * np.fft.fftfreq(wf_slice.shape[0], self.steps[0])
+        ky_arr = 2 * np.pi * np.fft.rfftfreq(wf_slice.shape[1], self.steps[1])
 
         kx2 = kx_arr[:, None] ** 2
         ky2 = ky_arr[None, :] ** 2
