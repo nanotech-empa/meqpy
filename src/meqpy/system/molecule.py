@@ -8,7 +8,7 @@ from ..utils.types import (
 )
 from ..utils.decay_constant import KappaMode
 from ..utils.coordinates import pad_lin_extrapolate, value_to_index
-from ..utils.physics import ldos_to_rate
+from ..utils.tersoff_hamann import ldos_to_rate
 import numpy as np
 from numbers import Real
 from typing import Sequence

@@ -8,7 +8,7 @@ from .types import (
 from .decay_constant import KappaMode, decay_constant
 from .lineshape import LineShape, lineshape_integral
 from .coordinates import pad_lin_extrapolate, value_to_index
-from .physics import ldos_to_rate
+from .tersoff_hamann import ldos_to_rate
 
 __all__ = [
     "KappaMode",
