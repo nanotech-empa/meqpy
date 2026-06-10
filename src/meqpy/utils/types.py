@@ -24,6 +24,15 @@ def is_nonnegative_float(input: float, label: str) -> float:
     return float(input)
 
 
+def is_nonnegative_int(input: int, label: str) -> int:
+    """Verify input is integer and not negative."""
+    if not isinstance(input, int):
+        raise TypeError(f"{label} has to be non-negative integer but got {type(input)}")
+    if input < 0:
+        raise ValueError(f"{label} has to be non-negative integer but got {input}")
+    return int(input)
+
+
 def is_real_or_1darray(value, name: str) -> np.ndarray:
     """Check if value is real or np.ndarray of dimension 1, and convert to np.ndarray if it is real.
 

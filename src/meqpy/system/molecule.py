@@ -3,6 +3,7 @@ from .dyson import Dyson
 from ..utils.types import (
     is_real_or_1darray,
     is_nonnegative_float,
+    is_nonnegative_int,
     is_sequence_of_pairs,
     is_pair,
 )
@@ -18,20 +19,29 @@ from warnings import warn
 class Molecule(System):
     """System using Dyson orbitals for charging transitions."""
 
-    def __init__(self, tip_radius: float = 2.0, **kwargs):
+    def __init__(self, tip_radius: float = 2.0, padding: int = 0, **kwargs):
         """Initialize Molecule.
 
         Parameters
         ----------
         tip_radius : float, optional
             Radius of s-wave tip in Angstrom, by default 2.0
+
+        padding : int, optional
+            Pad Dyson orbitals with `padding` zeros.
+            This might be necessary to avoid FFT artifacts at large tip_heights.
+
         **kwargs
             Keyword arguments for System class."""
         super().__init__(**kwargs)
 
         self._dyson_dict = {}
+
         self._tip_radius = tip_radius
         """Radius of s-wave tip in Angstrom"""
+
+        self._padding = padding
+        """Number of zeros to pad the Dyson orbitals."""
 
     @property
     def tip_radius(self) -> float:
@@ -42,6 +52,16 @@ class Molecule(System):
     def tip_radius(self, tip_radius):
         if is_nonnegative_float(tip_radius, "tip_radius"):
             self._tip_radius = tip_radius
+
+    @property
+    def padding(self) -> int:
+        """Number of zeros to pad the Dyson orbitals."""
+        return self._padding
+
+    @padding.setter
+    def padding(self, padding):
+        if is_nonnegative_int(padding, "padding"):
+            self._padding = padding
 
     def add_dyson(self, a: str | int, b: str | int, dyson: Dyson):
         """Add dyson transition to molecule.
@@ -160,7 +180,11 @@ class Molecule(System):
         if len(shapes) != 1:
             raise ValueError("Dysons do not have same shape.")
 
-        return shapes.pop()
+        nx, ny = shapes.pop()
+        nx += 2 * self.padding
+        ny += 2 * self.padding
+
+        return (nx, ny)
 
     @property
     def shape(self) -> tuple[int, int, int, int]:
@@ -227,78 +251,121 @@ class Molecule(System):
         a, b = key
         return self.get_index(a), self.get_index(b)
 
-    @property
-    def x(self) -> np.ndarray:
-        """Array containing values of x-axis of Dyson orbitals"""
-        return self._axis("x")
-
-    @property
-    def y(self) -> np.ndarray:
-        """Array containing values of y-axis of Dyson orbitals"""
-        return self._axis("y")
-
-    def _axis(self, axis: str) -> np.ndarray:
-        """Function to get values along arbitrary axis of Dyson orbitals
+    def _get_dyson_attribute(self, attr_name: str):
+        """Fetch attribute of Dyson orbitals, stored as array.
 
         Parameters
         ----------
-        axis : str
-            Axis to get values for, must be "x" or "y".
+        attr_name : str
+            Name of attribute in Dyson class.
 
         Returns
         -------
-        np.ndarray
-            1d array containing values along given axis of Dyson orbitals.
+        attribute: np.ndarray
+            Array stored under attr_name in Dyson class.
 
         Raises
         ------
         TypeError
-            If axis is not a string.
+            - if attr_name is not string
+            - if attribute is not np.ndarray
         ValueError
-            If axis is not "x" or "y".
-        ValueError
-            If axes of Dyson orbitals are not consistent.
+            If attribute is not the same in all Dyson orbitals
         """
         if not len(self._dyson_dict.keys()):
             return None
 
-        if not isinstance(axis, str):
-            raise TypeError(f"axis must be str, but got {type(axis)}")
-
-        if axis not in ["x", "y"]:
-            raise ValueError(f"axis must be 'x' or 'y' but got {axis}")
+        if not isinstance(attr_name, str):
+            raise TypeError(f"attr_name must be string, but got type {type(attr_name)}")
 
         # pick random dyson orbital as reference
         keys = list(self._dyson_dict.keys())
         key = keys.pop(0)
-        ax = getattr(self._dyson_dict[key], axis)
+        attr = getattr(self._dyson_dict[key], attr_name)
+
+        if not isinstance(attr, np.ndarray):
+            raise TypeError(
+                f"{attr_name} must be np.ndarray, but found type {type(attr)}"
+            )
 
         # check all remaining dysons have the same axis values
         for key in keys:
-            axi = getattr(self._dyson_dict[key], axis)
-            if len(ax) != len(axi) or (ax != axi).any():
-                raise ValueError(f"{axis} is not the same for all dysons.")
+            attr_i = getattr(self._dyson_dict[key], attr_name)
+            if attr.shape != attr_i.shape or (attr != attr_i).any():
+                raise ValueError(f"{attr_name} is not the same for all dysons.")
 
-        return ax
+        return attr
 
-    def get_axis_padded(self, axis: str, pad: int = 0) -> np.ndarray:
+    @property
+    def spacing(self):
+        """Spacing of Dyson orbital data points in Angstrom."""
+        return self._get_dyson_attribute("spacing")
+
+    @property
+    def origin(self):
+        """Origin of Dyson orbital coordinate system."""
+        unpadded_origin = self._get_dyson_attribute("origin")
+        indices_to_coords_mat = self.spacing[:, :2].T
+        padding_shift = indices_to_coords_mat @ np.array([-self.padding, -self.padding])
+        return unpadded_origin + padding_shift
+
+    @property
+    def mesh_cartesian(self):
+        """Create meshgrid in cartesian coordinates for Dyson orbital data points.
+
+        Returns
+        -------
+        X, Y: tuple of np.ndarrays
+            Each array being of shape (Nx, Ny).
+
+        Notes
+        -----
+        A warning is raised if X and Y are not perpendicular to the z-axis.
+        """
+
+        # check origin, spacing and shape are the same for all Dyson Orbitals
+        self.origin
+        self.spacing
+        self.dyson_shape
+
+        # get arbitrary dyson orbital
+        key = list(self._dyson_dict.keys())[0]
+        dyson = self.dyson_dict[key]
+
+        return dyson.mesh_cartesian(pad=self.padding)
+
+    @property
+    def x(self) -> np.ndarray:
+        """Array containing values of x-axis of Dyson orbitals"""
+        return self.get_axis_padded("x")
+
+    @property
+    def y(self) -> np.ndarray:
+        """Array containing values of y-axis of Dyson orbitals"""
+        return self.get_axis_padded("y")
+
+    def get_axis_padded(self, axis: str) -> np.ndarray:
         """Array containing values of x-axis, extrapolated on both ends.
 
         Parameters
         ----------
         axis : str
             Axis to return, must be "x" or "y".
-        pad : int, optional
-            Number of points to be added on both ends, by default 0
 
         Returns
         -------
         np.ndarray
-            1d array containing values along axis of Dyson orbitals, linearily extrapolated on both ends by `pad` points.
+            1d array containing values along axis of Dyson orbitals, linearily extrapolated on both ends by `self.padding` points.
         """
-        return pad_lin_extrapolate(self._axis(axis), pad)
 
-    def get_indices(self, xy_pairs: Sequence) -> list[tuple[int, int]]:
+        ax = self._get_dyson_attribute(axis)
+
+        if self.padding == 0:
+            return ax
+
+        return pad_lin_extrapolate(ax, self.padding)
+
+    def get_xy_indices(self, xy_pairs: Sequence) -> list[tuple[int, int]]:
         """Translate coordinates of points in xy-plane to indices for existing Dyson orbitals.
 
         Parameters
@@ -311,6 +378,7 @@ class Molecule(System):
         Indices: list[tuple[int, int]]
             List of tuples with indices for Dyson orbitals.
         """
+
         try:
             if is_pair(xy_pairs, Real, "xy_pairs"):
                 xy_pairs = [xy_pairs]
@@ -321,12 +389,12 @@ class Molecule(System):
 
         indices = []
         for xy in xy_pairs:
-            x, y = xy
+            coords = np.array(xy) - self.origin
+            coords_to_indices_mat = np.linalg.inv(self.spacing[:, :2]).T
+            ij_float = coords_to_indices_mat @ coords
+            ij_int = tuple([int(round(i)) for i in ij_float])
 
-            ix = value_to_index(x, self.x)
-            iy = value_to_index(y, self.y)
-
-            indices.append((ix, iy))
+            indices.append(ij_int)
 
         # keep output in same form as input
         if single_pair:
@@ -397,7 +465,6 @@ class Molecule(System):
         z: float | np.ndarray,
         bias: float | np.ndarray = 0.0,
         kappa_mode: str = None,
-        pad: int = 0,
         squeeze: bool = True,
         suppress_warning: bool = False,
     ) -> np.ndarray:
@@ -412,8 +479,6 @@ class Molecule(System):
             Bias voltage(s) between system and lead in V, by default 0.0. Only used in case of kappa_mode='full'.
         kappa_mode : str
             Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
-        pad : int, optional
-            pad wavefunction slice with `pad` number of points (zeros) on all sides, by default 0.
         squeeze : bool, optional
             The returned array is squeezed to remove any dimensions of size 1, default is `True`.
         suppress_warning : bool, optional
@@ -456,7 +521,6 @@ class Molecule(System):
             z,
             bias,
             kappa_mode=kappa_mode,
-            pad=pad,
             squeeze=False,
         )
         charging_rates *= self.normalized_charging_transitions(bias, squeeze=False)
@@ -473,7 +537,6 @@ class Molecule(System):
         z: float | np.ndarray,
         bias: float | np.ndarray = 0.0,
         kappa_mode: str = None,
-        pad: int = 0,
         squeeze: bool = True,
     ) -> np.ndarray:
         """Get transition rates by charging of system, including coupling via Dyson orbitals at certain points in the xy-plane.
@@ -490,8 +553,6 @@ class Molecule(System):
             Bias voltage(s) between system and lead in V, by default 0.0. Only used in case of kappa_mode='full'.
         kappa_mode : str
             Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
-        pad : int, optional
-            pad wavefunction slice with `pad` number of points (zeros) on all sides, by default 0.
         squeeze : bool, optional
             The returned array is squeezed to remove any dimensions of size 1, default is `True`.
 
@@ -524,7 +585,6 @@ class Molecule(System):
                     iz,
                     jbias,
                     kappa_mode=kappa_mode,
-                    pad=pad,
                     squeeze=False,
                 )
 
@@ -544,7 +604,6 @@ class Molecule(System):
         z: float | np.ndarray,
         bias: float | np.ndarray = 0.0,
         kappa_mode: str = None,
-        pad: int = 0,
         squeeze: bool = True,
         warn_missing_dysons: bool = True,
     ) -> np.ndarray:
@@ -558,8 +617,6 @@ class Molecule(System):
             Bias voltage(s) between molecule and tip in V, by default 0.0. Only used in case of kappa_mode='full'.
         kappa_mode : str
             Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
-        pad : int, optional
-            pad wavefunction slice with `pad` number of points (zeros) on all sides, by default 0.
         squeeze : bool, optional
             The returned array is squeezed to remove any dimensions of size 1, default is `True`.
         warn_missing_dysons: bool, optional
@@ -592,12 +649,6 @@ class Molecule(System):
             kappa_mode = self.kappa_mode
         kappa_mode = KappaMode(kappa_mode)
 
-        if not isinstance(pad, int):
-            raise TypeError(f"pad must be int but got {type(pad)}.")
-
-        if pad < 0:
-            raise ValueError("pad must not be negative.")
-
         if warn_missing_dysons and len(self.missing_dysons):
             warn(
                 "Some charging transition have not been assigned a Dyson instance. Will scale corresponding transitions to zero."
@@ -608,8 +659,7 @@ class Molecule(System):
         kappa_mat = self.kappa(bias, kappa_mode=kappa_mode, squeeze=False)
 
         # create output array with correct shape
-        dyson_shape = (self.dyson_shape[0] + 2 * pad, self.dyson_shape[1] + 2 * pad)
-        out_shape = dyson_shape + z.shape + kappa_mat.shape
+        out_shape = self.dyson_shape + z.shape + kappa_mat.shape
         coupling_strength_mat = np.zeros(out_shape)
 
         # fill array:
@@ -618,13 +668,13 @@ class Molecule(System):
 
             kappa_ab = kappa_mat[..., a, b]
             coupling_strength_mat[..., a, b] = dyson.coupling_strength(
-                z, kappa_ab, pad, squeeze=False
+                z, kappa_ab, self.padding, squeeze=False
             ) * ldos_to_rate(self.tip_radius, kappa_ab)
 
             if kappa_mode == KappaMode.FULL:  # matrix not symmetric
                 kappa_ba = kappa_mat[..., b, a]
                 coupling_strength_mat[..., b, a] = dyson.coupling_strength(
-                    z, kappa_ba, pad, squeeze=False
+                    z, kappa_ba, self.padding, squeeze=False
                 ) * ldos_to_rate(self.tip_radius, kappa_ba)
             else:  # kappa is constant and the matrix symmetric
                 coupling_strength_mat[..., b, a] = coupling_strength_mat[..., a, b]
