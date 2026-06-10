@@ -13,10 +13,6 @@ import numpy as np
 from numbers import Real
 from typing import Sequence
 from warnings import warn
-import scipy.constants as const
-
-BOHR2ANG = const.physical_constants["Bohr radius"][0] * 1e10  # Angstrom
-ELEMENTARY_CHARGE = const.elementary_charge  #
 
 
 class Molecule(System):
