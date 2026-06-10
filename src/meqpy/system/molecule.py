@@ -8,6 +8,7 @@ from ..utils.types import (
 )
 from ..utils.decay_constant import KappaMode
 from ..utils.coordinates import pad_lin_extrapolate, value_to_index
+from ..utils.physics import ldos_to_rate
 import numpy as np
 from numbers import Real
 from typing import Sequence
@@ -622,13 +623,13 @@ class Molecule(System):
             kappa_ab = kappa_mat[..., a, b]
             coupling_strength_mat[..., a, b] = dyson.coupling_strength(
                 z, kappa_ab, pad, squeeze=False
-            ) * self._renorm_factor_dysons(kappa_ab)
+            ) * ldos_to_rate(self.tip_radius, kappa_ab)
 
             if kappa_mode == KappaMode.FULL:  # matrix not symmetric
                 kappa_ba = kappa_mat[..., b, a]
                 coupling_strength_mat[..., b, a] = dyson.coupling_strength(
                     z, kappa_ba, pad, squeeze=False
-                ) * self._renorm_factor_dysons(kappa_ba)
+                ) * ldos_to_rate(self.tip_radius, kappa_ba)
             else:  # kappa is constant and the matrix symmetric
                 coupling_strength_mat[..., b, a] = coupling_strength_mat[..., a, b]
 
@@ -636,33 +637,3 @@ class Molecule(System):
             coupling_strength_mat = np.squeeze(coupling_strength_mat)
 
         return coupling_strength_mat
-
-    def _renorm_factor_dysons(self, kappa: np.ndarray) -> np.ndarray:
-        """Renormalization factor approximation, according to Tersoff-Hamann
-        equation (10) in https://doi.org/10.1103/PhysRevB.31.805
-
-        Parameters
-        ----------
-        kappa : float | np.ndarray
-            decay constant
-
-        Returns
-        -------
-        float | np.ndarray
-            Renomalization factor for coupling strength.
-        """
-
-        if isinstance(kappa, Real):
-            kappa = np.array([kappa])
-
-        if not isinstance(kappa, np.ndarray):
-            raise TypeError(
-                f"kappa must be a real number or np.ndarray but got {type(kappa)}."
-            )
-
-        renorm_factor = 0.1
-        renorm_factor *= (self.tip_radius / BOHR2ANG) ** 2
-        renorm_factor *= np.exp(2 * kappa * self.tip_radius)
-        renorm_factor *= 1 / ELEMENTARY_CHARGE
-
-        return renorm_factor
