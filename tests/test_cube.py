@@ -17,6 +17,14 @@ def test_from_file(sample_cube):
         ]
     )
     assert np.allclose(cube.cart_coords, coords)
+    spacing = np.array(
+        [
+            [0.500000, 0.000000, 0.000000],
+            [0.000000, 0.500000, 0.000000],
+            [0.000000, 0.000000, 0.500000],
+        ]
+    )
+    assert np.allclose(cube.spacing, spacing, atol=1e-7)
     assert cube.elements == ["N", "H", "H", "H"]
     assert np.allclose(cube.masses, [14.007, 1.008, 1.008, 1.008], atol=1e-3)
     assert np.allclose(cube.center_of_mass, [5.00137, 5.00000, 5.00000], atol=1e-3)
