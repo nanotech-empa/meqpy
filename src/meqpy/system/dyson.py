@@ -5,7 +5,6 @@ from .transition import Transition
 from ..io.cube import Cube
 from ..utils.types import is_real_or_1darray, is_nonnegative_int
 from ase.units import Bohr
-import warnings
 
 
 class Dyson(Transition):
@@ -85,7 +84,7 @@ class Dyson(Transition):
         else:
             distance = slice_height - cube.origin[2]
 
-        self.data = cube.get_slice_data(distance) / Bohr**1.5
+        self.data = cube.get_slice_data(distance, axis=2) / Bohr**1.5
 
     @property
     def shape(self) -> tuple[int, int]:
@@ -101,29 +100,6 @@ class Dyson(Transition):
     def y(self):
         """y values of cube grid"""
         return super().get_cart_axis(1)
-
-    def mesh_cartesian(self, pad: int = 0):
-        """Create meshgrid of data points in cartesian coordinates.
-
-        Parameters
-        ----------
-        pad : int, optional
-            Pad the grid before and after, by default 0
-
-        Returns
-        -------
-        X, Y: tuple of np.ndarrays
-            Each array being of shape (Nx + 2*pad, Ny + 2*pad).
-
-        Notes
-        -----
-        A warning is raised if X and Y are not perpendicular to the z-axis.
-        """
-
-        if any(self.spacing[:, 2] != 0.0):
-            warnings.warn("Slice of Wavefunction is not perpendicular to z-axis.")
-
-        return super().mesh_cartesian(pad=pad)
 
     def extrapolate_wavefunction(
         self,

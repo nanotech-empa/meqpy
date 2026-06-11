@@ -8,7 +8,7 @@ from ..utils.types import (
     is_pair,
 )
 from ..utils.decay_constant import KappaMode
-from ..utils.coordinates import pad_lin_extrapolate, value_to_index
+from ..utils.coordinates import pad_lin_extrapolate
 from ..utils.tersoff_hamann import ldos_to_rate
 import numpy as np
 from numbers import Real

@@ -27,9 +27,6 @@ class Transition:
         self.spacing = None
         """Spacing of cube data points in Angstrom."""
 
-        self.shape = None
-        """Shape of volumetric data."""
-
         cube = self.file_to_cube(cube)
         self.parse_cube_dimensions(cube, center_mass)
 
