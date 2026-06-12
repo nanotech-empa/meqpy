@@ -3,7 +3,7 @@ from numbers import Real
 import numpy as np
 from .transition import Transition
 from ..io.cube import Cube
-from ..utils.types import is_real_or_1darray, is_nonnegative_int
+from ..utils.types import is_real_or_1darray, validate_nonnegative_int
 from ase.units import Bohr
 
 
@@ -149,7 +149,7 @@ class Dyson(Transition):
                 f"pad must be of type int and non-negative, but got {type(pad)}"
             )
 
-        is_nonnegative_int(pad, "pad")
+        validate_nonnegative_int(pad, "pad")
 
         padding = ((pad, pad), (pad, pad))
         data = np.pad(self.data, padding)

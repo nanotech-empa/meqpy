@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from ..io.cube import Cube
-from ..utils.types import is_nonnegative_int
+from ..utils.types import validate_nonnegative_int
 
 
 class Transition:
@@ -121,7 +121,7 @@ class Transition:
             The arrays being of shape (Ni+2pad,) for dimension i.
         """
 
-        is_nonnegative_int(pad, "pad")
+        validate_nonnegative_int(pad, "pad")
 
         if not hasattr(self, "data"):
             raise AttributeError("No volumetric data in object.")
@@ -203,7 +203,7 @@ class Transition:
             If no volumetric data is present.
         """
 
-        is_nonnegative_int(pad, "pad")
+        validate_nonnegative_int(pad, "pad")
 
         if not hasattr(self, "data"):
             raise AttributeError("No volumetric data in object.")

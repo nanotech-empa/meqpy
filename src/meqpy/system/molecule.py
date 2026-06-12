@@ -3,7 +3,7 @@ from .dyson import Dyson
 from ..utils.types import (
     is_real_or_1darray,
     is_nonnegative_float,
-    is_nonnegative_int,
+    validate_nonnegative_int,
     is_sequence_of_pairs,
     is_pair,
 )
@@ -60,7 +60,7 @@ class Molecule(System):
 
     @padding.setter
     def padding(self, padding):
-        if is_nonnegative_int(padding, "padding"):
+        if validate_nonnegative_int(padding, "padding"):
             self._padding = padding
 
     def add_dyson(self, a: str | int, b: str | int, dyson: Dyson):
