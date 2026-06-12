@@ -1,7 +1,7 @@
 from numbers import Real
 import numpy as np
 from scipy import constants as const
-from .types import ValidatedEnum, is_real_or_1darray, is_nonnegative_float
+from .types import ValidatedEnum, validate_real_or_1darray, validate_nonnegative_float
 
 
 # Fundamental constants
@@ -59,14 +59,14 @@ def decay_constant(
             f"kappa_mode must be type KappaMode, but got {type(kappa_mode)}"
         )
 
-    bias = is_real_or_1darray(bias, "bias")
+    bias = validate_real_or_1darray(bias, "bias")
 
     if not isinstance(delta, (Real, np.ndarray)):
         raise TypeError(f"delta must be Real or np.ndarray, but got {type(delta)}")
 
     delta = np.asarray(delta)
 
-    is_nonnegative_float(workfunction, "workfunction")
+    validate_nonnegative_float(workfunction, "workfunction")
 
     barrier_height = np.ones(bias.shape + delta.shape) * workfunction
 

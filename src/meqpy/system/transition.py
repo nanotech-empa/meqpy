@@ -79,14 +79,14 @@ class Transition:
 
         self.spacing = cube.spacing
 
-        self.is_z_perp_and_cartesian()
+        self.validate_z_perp_and_cartesian()
 
         if center_mass:
             self.origin = -cube.center_of_mass
         else:
             self.origin = cube.origin
 
-    def is_z_perp_and_cartesian(self) -> bool:
+    def validate_z_perp_and_cartesian(self) -> bool:
         """Returns True if last axis of cube grid is perpendicular other axes
         and aligns with z-axis. Raises ValueError otherwise."""
 

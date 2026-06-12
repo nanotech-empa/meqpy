@@ -2,8 +2,8 @@ from .state import State
 from ..utils import (
     LineShape,
     KappaMode,
-    is_real_or_1darray,
-    is_nonnegative_float,
+    validate_real_or_1darray,
+    validate_nonnegative_float,
 )
 from ..utils import decay_constant, lineshape_integral
 from typing import Optional, Sequence
@@ -91,7 +91,7 @@ class System:
 
     @hwhm.setter
     def hwhm(self, hwhm: float):
-        self._hwhm = is_nonnegative_float(hwhm, "hwhm")
+        self._hwhm = validate_nonnegative_float(hwhm, "hwhm")
 
     @property
     def lineshape(self) -> str:
@@ -109,7 +109,7 @@ class System:
 
     @workfunction.setter
     def workfunction(self, workfunction: float):
-        self._workfunction = is_nonnegative_float(workfunction, "workfunction")
+        self._workfunction = validate_nonnegative_float(workfunction, "workfunction")
 
     @property
     def reorg_shift(self) -> float:
@@ -118,7 +118,7 @@ class System:
 
     @reorg_shift.setter
     def reorg_shift(self, reorg_shift: float):
-        self._reorg_shift = is_nonnegative_float(reorg_shift, "reorg_shift")
+        self._reorg_shift = validate_nonnegative_float(reorg_shift, "reorg_shift")
 
     @property
     def kappa_mode(self) -> str:
@@ -385,7 +385,7 @@ class System:
         """
 
         # make sure V is array of shape (M,)
-        bias = is_real_or_1darray(bias, "bias")
+        bias = validate_real_or_1darray(bias, "bias")
 
         # offset voltages by energies of ion resonances --> shape (M,N,N)
         energy_arg = -self.dE[None, ...] - self.dQ[None, ...] * bias[:, None, None]
@@ -510,7 +510,7 @@ class System:
             - 'full': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * ( workfunction - deltaE + bias/2 )  / HBAR^2 ) * 1e-10
         """
 
-        z = is_real_or_1darray(z, "z")
+        z = validate_real_or_1darray(z, "z")
         kappa_mat = self.kappa(bias, kappa_mode=kappa_mode, squeeze=False)
         coupling_strength = G0 * np.exp(-2 * np.multiply.outer(z, kappa_mat))
 
@@ -556,7 +556,7 @@ class System:
         else:
             kappa_mode = self._kappa_mode
 
-        bias = is_real_or_1darray(bias, "bias")
+        bias = validate_real_or_1darray(bias, "bias")
 
         delta = -(self.dE + self.reorg_shift) * self.dQ
 

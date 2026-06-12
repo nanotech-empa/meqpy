@@ -1,11 +1,11 @@
 from .system import System
 from .dyson import Dyson
 from ..utils.types import (
-    is_real_or_1darray,
-    is_nonnegative_float,
+    validate_real_or_1darray,
+    validate_nonnegative_float,
     validate_nonnegative_int,
-    is_sequence_of_pairs,
-    is_pair,
+    validate_sequence_of_pairs,
+    validate_pair,
 )
 from ..utils.decay_constant import KappaMode
 from ..utils.coordinates import pad_lin_extrapolate
@@ -50,7 +50,7 @@ class Molecule(System):
 
     @tip_radius.setter
     def tip_radius(self, tip_radius):
-        if is_nonnegative_float(tip_radius, "tip_radius"):
+        if validate_nonnegative_float(tip_radius, "tip_radius"):
             self._tip_radius = tip_radius
 
     @property
@@ -377,11 +377,11 @@ class Molecule(System):
         """
 
         try:
-            if is_pair(xy_pairs, Real, "xy_pairs"):
+            if validate_pair(xy_pairs, Real, "xy_pairs"):
                 xy_pairs = [xy_pairs]
                 single_pair = True
         except (TypeError, IndexError):
-            is_sequence_of_pairs(xy_pairs, Real, "xy_pairs")
+            validate_sequence_of_pairs(xy_pairs, Real, "xy_pairs")
             single_pair = False
 
         indices = []
@@ -498,8 +498,8 @@ class Molecule(System):
         All transitions are calculated at once, which can lead to large memory requirement.
         If only a few point in the xy-plane are needed, consider using `Molecule.charging_rates_pointspec` instead.
         """
-        z = is_real_or_1darray(z, "z")
-        bias = is_real_or_1darray(bias, "bias")
+        z = validate_real_or_1darray(z, "z")
+        bias = validate_real_or_1darray(bias, "bias")
 
         if not suppress_warning:
             out_shape = z.shape + bias.shape + self.shape
@@ -560,13 +560,13 @@ class Molecule(System):
             The returned array is squeezed to remove any dimensions of size 1 if `squeeze` is `True`.
         """
         try:
-            if is_pair(points, int, "points"):
+            if validate_pair(points, int, "points"):
                 points = [points]
         except (TypeError, IndexError):
-            is_sequence_of_pairs(points, int, "points")
+            validate_sequence_of_pairs(points, int, "points")
 
-        z = is_real_or_1darray(z, "z")
-        bias = is_real_or_1darray(bias, "bias")
+        z = validate_real_or_1darray(z, "z")
+        bias = validate_real_or_1darray(bias, "bias")
 
         norm_rates = self.normalized_charging_transitions(bias, squeeze=False)
         norm_rates *= self.clebsch_gordan_factors
@@ -651,7 +651,7 @@ class Molecule(System):
                 "Some charging transition have not been assigned a Dyson instance. Will scale corresponding transitions to zero."
             )
 
-        z = is_real_or_1darray(z, "z") + self.tip_radius
+        z = validate_real_or_1darray(z, "z") + self.tip_radius
 
         kappa_mat = self.kappa(bias, kappa_mode=kappa_mode, squeeze=False)
 

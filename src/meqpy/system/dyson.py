@@ -3,7 +3,7 @@ from numbers import Real
 import numpy as np
 from .transition import Transition
 from ..io.cube import Cube
-from ..utils.types import is_real_or_1darray, validate_nonnegative_int
+from ..utils.types import validate_real_or_1darray, validate_nonnegative_int
 from ase.units import Bohr
 
 
@@ -155,7 +155,7 @@ class Dyson(Transition):
         data = np.pad(self.data, padding)
         n1, n2 = data.shape
 
-        height = is_real_or_1darray(height, "height")
+        height = validate_real_or_1darray(height, "height")
         dz = abs(height - self.slice_height)
 
         # =====================================================================

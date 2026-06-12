@@ -1,10 +1,10 @@
 import numpy as np
 from numbers import Real
-from .types import is_real_or_1darray
+from .types import validate_real_or_1darray
 
 
 def pad_lin_extrapolate(array: np.ndarray, pad: int) -> np.ndarray:
-    array = is_real_or_1darray(array, "array")
+    array = validate_real_or_1darray(array, "array")
 
     if not isinstance(pad, int):
         raise ValueError(f"pad must be a non-negative integer, got {type(pad)}.")
