@@ -5,16 +5,10 @@ from meqpy.system import Dyson
 
 def test_from_file(cube_path):
     dyson = Dyson(cube_path("cartesian"))
-    assert isinstance(dyson, Dyson)
 
     assert dyson.shape == (20, 20)
 
-    spacing = np.array(
-        [
-            [0.500000, 0.000000, 0.000000],
-            [0.000000, 0.500000, 0.000000],
-        ]
-    )
+    spacing = np.eye(2, 3) * 0.5
     assert np.allclose(dyson.spacing, spacing, atol=1e-6)
     assert np.allclose(dyson.origin, [-5.00137, -5.00000], atol=1e-6)
     assert np.allclose(dyson.steps, [0.5, 0.5], atol=1e-6)
@@ -32,7 +26,6 @@ def test_from_file(cube_path):
 
 def test_rhombic_cube(cube_path):
     dyson = Dyson(cube_path("rhombic"), center_mass=False)
-    assert isinstance(dyson, Dyson)
 
     spacing = np.array(
         [

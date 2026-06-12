@@ -181,10 +181,7 @@ class Molecule(System):
             raise ValueError("Dysons do not have same shape.")
 
         nx, ny = shapes.pop()
-        nx += 2 * self.padding
-        ny += 2 * self.padding
-
-        return (nx, ny)
+        return (nx + 2 * self.padding, ny + 2 * self.padding)
 
     @property
     def shape(self) -> tuple[int, int, int, int]:

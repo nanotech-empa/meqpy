@@ -4,7 +4,6 @@ from meqpy.io import Cube
 
 def test_from_file(cube_path):
     cube = Cube(cube_path("cartesian"))
-    assert isinstance(cube, Cube)
     assert cube.data.shape == (20, 20, 20)
     assert len(cube.atoms) == 4
     assert cube.cart_coords.shape == (4, 3)
@@ -17,13 +16,7 @@ def test_from_file(cube_path):
         ]
     )
     assert np.allclose(cube.cart_coords, coords)
-    spacing = np.array(
-        [
-            [0.500000, 0.000000, 0.000000],
-            [0.000000, 0.500000, 0.000000],
-            [0.000000, 0.000000, 0.500000],
-        ]
-    )
+    spacing = np.eye(3) * 0.5
     assert np.allclose(cube.spacing, spacing, atol=1e-7)
     assert cube.elements == ["N", "H", "H", "H"]
     assert np.allclose(cube.masses, [14.007, 1.008, 1.008, 1.008], atol=1e-3)

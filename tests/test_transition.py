@@ -11,15 +11,7 @@ def nottest(obj):
 
 @nottest
 def test_transition_cartesian(transition):
-    assert isinstance(transition, Transition)
-
-    spacing = np.array(
-        [
-            [0.500000, 0.000000, 0.000000],
-            [0.000000, 0.500000, 0.000000],
-            [0.000000, 0.000000, 0.500000],
-        ]
-    )
+    spacing = np.eye(3) * 0.5
     assert np.allclose(transition.spacing, spacing, atol=1e-6)
     assert np.allclose(transition.origin, [-5.00137, -5.00000, -5.00000], atol=1e-6)
     assert np.allclose(transition.steps, [0.5, 0.5, 0.5], atol=1e-6)
@@ -38,7 +30,6 @@ def test_from_cube(cube_path):
 
 def test_from_file_no_center_mass(cube_path):
     transition = Transition(cube_path("cartesian"), center_mass=False)
-    assert isinstance(transition, Transition)
     assert np.allclose(transition.origin, [0.0, 0.0, 0.0], atol=1e-3)
 
 
@@ -56,7 +47,6 @@ def test_non_ortho_cube(cube_path):
 
 def test_rhombic_cube(cube_path):
     transition = Transition(cube_path("rhombic"), center_mass=False)
-    assert isinstance(transition, Transition)
 
     spacing = np.array(
         [
