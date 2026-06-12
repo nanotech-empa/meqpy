@@ -3,8 +3,8 @@ import pytest
 from meqpy.system import Dyson
 
 
-def test_from_file(sample_cube):
-    dyson = Dyson(sample_cube)
+def test_from_file(cube_path):
+    dyson = Dyson(cube_path("cartesian"))
     assert isinstance(dyson, Dyson)
 
     assert dyson.shape == (20, 20)
@@ -30,8 +30,8 @@ def test_from_file(sample_cube):
     assert str(e_info.value) == "axis must be in [0, 1], but got 2"
 
 
-def test_rhombic_cube(sample_cube_rhombic):
-    dyson = Dyson(sample_cube_rhombic, center_mass=False)
+def test_rhombic_cube(cube_path):
+    dyson = Dyson(cube_path("rhombic"), center_mass=False)
     assert isinstance(dyson, Dyson)
 
     spacing = np.array(
@@ -55,8 +55,8 @@ def test_rhombic_cube(sample_cube_rhombic):
     assert np.allclose(dyson.grid(pad=5)[1], grid, atol=1e-6)
 
 
-def test_cartesian_mesh(sample_cube_rhombic):
-    dyson = Dyson(sample_cube_rhombic, center_mass=False)
+def test_cartesian_mesh(cube_path):
+    dyson = Dyson(cube_path("rhombic"), center_mass=False)
 
     assert dyson.mesh_cartesian().shape == (2, 11, 11)
 
@@ -64,8 +64,8 @@ def test_cartesian_mesh(sample_cube_rhombic):
     assert np.allclose(point, np.array([-1.41336, -0.65322]), atol=1e-5)
 
 
-def test_dyson_coupling_strength(sample_cube):
-    dyson = Dyson(sample_cube)
+def test_dyson_coupling_strength(cube_path):
+    dyson = Dyson(cube_path("cartesian"))
 
     sts_map = dyson.coupling_strength(
         height=5.0,

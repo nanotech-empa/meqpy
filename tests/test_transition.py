@@ -4,8 +4,13 @@ from meqpy.io import Cube
 from meqpy.system import Transition
 
 
-def test_from_file(sample_cube):
-    transition = Transition(sample_cube)
+def nottest(obj):
+    obj.__test__ = False
+    return obj
+
+
+@nottest
+def test_transition_cartesian(transition):
     assert isinstance(transition, Transition)
 
     spacing = np.array(
@@ -20,31 +25,37 @@ def test_from_file(sample_cube):
     assert np.allclose(transition.steps, [0.5, 0.5, 0.5], atol=1e-6)
 
 
-def test_from_file_no_center_mass(sample_cube):
-    transition = Transition(sample_cube, center_mass=False)
+def test_from_file(cube_path):
+    transition = Transition(cube_path("cartesian"))
+    test_transition_cartesian(transition)
+
+
+def test_from_cube(cube_path):
+    cube = Cube(cube_path("cartesian"))
+    transition = Transition(cube)
+    test_transition_cartesian(transition)
+
+
+def test_from_file_no_center_mass(cube_path):
+    transition = Transition(cube_path("cartesian"), center_mass=False)
     assert isinstance(transition, Transition)
     assert np.allclose(transition.origin, [0.0, 0.0, 0.0], atol=1e-3)
 
 
-def test_from_cube(sample_cube):
-    cube = Cube(sample_cube)
-    test_from_file(cube)
-
-
-def test_rotated_cube(sample_cube_rotated):
+def test_rotated_cube(cube_path):
     with pytest.raises(ValueError) as e_info:
-        Transition(sample_cube_rotated)
+        Transition(cube_path("rotated"))
     assert str(e_info.value) == "Last axis is not aligned with z-axis"
 
 
-def test_non_ortho_cube(sample_cube_non_ortho_z):
+def test_non_ortho_cube(cube_path):
     with pytest.raises(ValueError) as e_info:
-        Transition(sample_cube_non_ortho_z)
+        Transition(cube_path("non_ortho_z"))
     assert str(e_info.value) == "z axis is not orthogonal to other axes."
 
 
-def test_rhombic_cube(sample_cube_rhombic):
-    transition = Transition(sample_cube_rhombic, center_mass=False)
+def test_rhombic_cube(cube_path):
+    transition = Transition(cube_path("rhombic"), center_mass=False)
     assert isinstance(transition, Transition)
 
     spacing = np.array(

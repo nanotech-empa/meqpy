@@ -2,8 +2,8 @@ import numpy as np
 from meqpy.io import Cube
 
 
-def test_from_file(sample_cube):
-    cube = Cube(sample_cube)
+def test_from_file(cube_path):
+    cube = Cube(cube_path("cartesian"))
     assert isinstance(cube, Cube)
     assert cube.data.shape == (20, 20, 20)
     assert len(cube.atoms) == 4
@@ -30,15 +30,15 @@ def test_from_file(sample_cube):
     assert np.allclose(cube.center_of_mass, [5.00137, 5.00000, 5.00000], atol=1e-3)
 
 
-def test_magsqr(sample_orbital):
-    cube = Cube(sample_orbital)
+def test_magsqr(cube_path):
+    cube = Cube(cube_path("orbital"))
     # Check that the values are non-negative
     print(cube.magsqr)
     assert np.isclose(cube.magsqr, 1.0, atol=1e-3)
 
 
-def test_get_slice(sample_cube):
-    cube = Cube(sample_cube)
+def test_get_slice(cube_path):
+    cube = Cube(cube_path("cartesian"))
     # Test getting a slice along the x-axis at a distance of 5.0
     slice_x = cube.get_slice_data(distance=5.0, axis=0)
     assert slice_x.shape == (20, 20)  # The slice should be 2D with shape (20, 20)
