@@ -1,5 +1,6 @@
 from .types import (
     is_nonnegative_float,
+    validate_nonnegative_int,
     is_real_or_1darray,
     is_stack_of_square_matrices,
     is_sequence_of_pairs,
@@ -14,6 +15,7 @@ __all__ = [
     "KappaMode",
     "LineShape",
     "is_nonnegative_float",
+    "validate_nonnegative_int",
     "is_real_or_1darray",
     "is_stack_of_square_matrices",
     "is_sequence_of_pairs",

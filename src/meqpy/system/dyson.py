@@ -3,7 +3,7 @@ from numbers import Real
 import numpy as np
 from .transition import Transition
 from ..io.cube import Cube
-from ..utils.types import is_real_or_1darray
+from ..utils.types import is_real_or_1darray, validate_nonnegative_int
 from ase.units import Bohr
 
 
@@ -13,7 +13,6 @@ class Dyson(Transition):
         cube: Cube | str | os.PathLike = None,
         slice_height: int = 1.5,
         center_mass: bool = True,
-        axis: int = 2,
     ):
         """Initialize Dyson instance for charged transitions within Molecule.
         A slice of the cube data at certain height is used to extrapolate the wavefunction
@@ -28,8 +27,6 @@ class Dyson(Transition):
             See also `center_mass` parameter.
         center_mass : bool, optional
             Shift origin of coordinate system to molecule's center of mass, default is True.
-        axis : int, optional
-            Axis to be considered z-axis, default 2.
 
         Raises
         ------
@@ -37,36 +34,23 @@ class Dyson(Transition):
             If `cube` is neither instance of Cube class, nor path to a cube file.
         """
 
-        self.grid = None
-        """Axis grid of cube."""
-
-        self.spacing = None
-        """Spacing of cube data points in Angstrom."""
-
         self.amplitude = None
         """Amplitude (magnitude squared) of Dyson orbital."""
 
-        self.x = None
-        """x values of cube data points."""
-
-        self.y = None
-        """y values of cube data points."""
-
-        self.wf_slice = None
+        self.data = None
         """Slice of cube used for extrapolation into vacuum."""
 
         self.slice_height = slice_height
         """Height in Angstrom at which to extract a slice of the cube, by default 1.5 Angstrom."""
 
         cube = super().file_to_cube(cube)
-        self.load_cube(cube, slice_height, center_mass, axis)
+        self.load_cube(cube, slice_height, center_mass)
 
     def load_cube(
         self,
         cube: Cube,
         slice_height: int = 1.5,
         center_mass: bool = True,
-        axis: int = 2,
     ):
         """Load cube data and extract slice for extrapolation into vacuum.
 
@@ -79,8 +63,6 @@ class Dyson(Transition):
             See also `center_mass` parameter.
         center_mass : bool, optional
             Shift origin of coordinate system to molecule's center of mass, default is True.
-        axis : int, optional
-            Axis to be considered z-axis, default 2.
         """
 
         if not isinstance(slice_height, Real):
@@ -88,32 +70,36 @@ class Dyson(Transition):
                 f"slice_height must be of type float, but got {type(slice_height)}"
             )
 
-        if not isinstance(axis, int) or axis not in [0, 1, 2]:
-            raise TypeError(
-                f"axis must be of type int and one of [0, 1, 2], but got {axis}"
-            )
+        super().parse_cube_dimensions(cube=cube, center_mass=center_mass)
 
-        super().parse_cube_dimensions(cube=cube, center_mass=center_mass, axis=axis)
-
-        self.grid = self.grid[:2]
         self.spacing = self.spacing[:2]
 
-        self.x, self.y = self.grid
+        self.origin = self.origin[:2]
 
         self.amplitude = cube.magsqr
 
         # switch to cube box coordinate system
         if center_mass:
-            distance = slice_height + cube.center_of_mass[axis]
+            distance = slice_height + cube.center_of_mass[2]
         else:
-            distance = slice_height - cube.origin[axis]
+            distance = slice_height - cube.origin[2]
 
-        self.wf_slice = cube.get_slice_data(distance, axis=axis) / Bohr**1.5
+        self.data = cube.get_slice_data(distance, axis=2) / Bohr**1.5
 
     @property
     def shape(self) -> tuple[int, int]:
-        """Shape of wf_slice."""
-        return self.wf_slice.shape
+        """Shape of sliced data."""
+        return self.data.shape
+
+    @property
+    def x(self):
+        """x values of cube"""
+        return super().get_cart_axis(0)
+
+    @property
+    def y(self):
+        """y values of cube grid"""
+        return super().get_cart_axis(1)
 
     def extrapolate_wavefunction(
         self,
@@ -163,12 +149,11 @@ class Dyson(Transition):
                 f"pad must be of type int and non-negative, but got {type(pad)}"
             )
 
-        if pad < 0:
-            raise ValueError(f"pad must be of type int and non-negative, but got {pad}")
+        validate_nonnegative_int(pad, "pad")
 
         padding = ((pad, pad), (pad, pad))
-        wf_slice = np.pad(self.wf_slice, padding)
-        n1, n2 = wf_slice.shape
+        data = np.pad(self.data, padding)
+        n1, n2 = data.shape
 
         height = is_real_or_1darray(height, "height")
         dz = abs(height - self.slice_height)
@@ -177,7 +162,7 @@ class Dyson(Transition):
         # The following code snipped was adapted from:
         # https://github.com/nanotech-empa/cp2k-spm-tools/blob/main/cp2k_spm_tools/cp2k_grid_orbitals.py
         #
-        fourier = np.fft.rfft2(wf_slice)
+        fourier = np.fft.rfft2(data)
 
         # Build the in-plane reciprocal basis
         b1, b2 = 2 * np.pi * np.linalg.inv(self.spacing[:, :2]).T
@@ -192,7 +177,7 @@ class Dyson(Transition):
         kappa_xy = np.sqrt(kx**2 + ky**2 + kappa[..., None, None] ** 2)
         decay = np.exp(-np.multiply.outer(dz, kappa_xy))
 
-        wf_extrapolated = np.fft.irfft2(fourier * decay, wf_slice.shape)
+        wf_extrapolated = np.fft.irfft2(fourier * decay, data.shape)
         #
         # =====================================================================
 
