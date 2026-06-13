@@ -15,24 +15,22 @@ class ValidatedEnum(Enum):
         )
 
 
-def validate_nonnegative_float(value: float, label: str) -> float:
-    """Verify value is a non-negative float."""
-    msg = f"{label} has to be non-negative float"
-    if not isinstance(value, Real):
-        raise TypeError(f"{msg} but got {type(value).__name__}")
-    if value < 0:
-        raise ValueError(f"{msg} but got {value}")
-    return float(value)
+def _make_bounded_number_validator(caster, type_check, *, minimum=None):
+    def validator(value, name="value"):
+        if not isinstance(value, type_check):
+            raise TypeError(
+                f"{name} must be {type_check.__name__}, got {type(value).__name__}"
+            )
+        value = caster(value)
+        if minimum is not None and value < minimum:
+            raise ValueError(f"{name} must be >= {minimum}, got {value}")
+        return value
+
+    return validator
 
 
-def validate_nonnegative_int(value: int, label: str) -> int:
-    """Verify value is a non-negative integer."""
-    msg = f"{label} has to be a non-negative integer"
-    if not isinstance(value, int):
-        raise TypeError(f"{msg} but got {type(value).__name__}")
-    if value < 0:
-        raise ValueError(f"{msg} but got {value}")
-    return value
+validate_nonnegative_float = _make_bounded_number_validator(float, Real, minimum=0)
+validate_nonnegative_int = _make_bounded_number_validator(int, int, minimum=0)
 
 
 def validate_real_or_1darray(value, name: str) -> np.ndarray:
