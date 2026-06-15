@@ -47,6 +47,15 @@ def test_rhombic_cube(cube_path):
     assert np.allclose(dyson.grid(pad=5)[0], grid, atol=1e-6)
     assert np.allclose(dyson.grid(pad=5)[1], grid, atol=1e-6)
 
+    # test validator
+    with pytest.raises(ValueError) as e_info:
+        dyson.grid(pad=-1)
+    assert str(e_info.value) == "pad must be >= 0, got -1"
+
+    with pytest.raises(TypeError) as e_info:
+        dyson.grid(pad=0.5)
+    assert str(e_info.value) == "pad must be int, got float"
+
 
 def test_cartesian_mesh(cube_path):
     dyson = Dyson(cube_path("rhombic"), center_mass=False)
