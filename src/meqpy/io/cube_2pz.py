@@ -2,7 +2,7 @@ import numpy as np
 from ase.atoms import Atoms
 from ase.units import Bohr
 from .cube import Cube
-from ..utils.types import is_real_or_1darray, is_nonnegative_float
+from ..utils.types import validate_real_or_1darray, validate_nonnegative_float
 from numbers import Real
 
 
@@ -54,7 +54,7 @@ class Cube_2pz(Cube):
                 f"but got object with shape {positions.shape}"
             )
 
-        self.eigenvector = is_real_or_1darray(eigenvector, "eigenvector")
+        self.eigenvector = validate_real_or_1darray(eigenvector, "eigenvector")
         if len(eigenvector) != len(positions):
             raise IndexError(
                 f"Positions and eigenvector must be of same length, "
@@ -79,7 +79,7 @@ class Cube_2pz(Cube):
 
         self.boundary = boundary
 
-        self.spacing = np.eye(3) * is_nonnegative_float(spacing, "spacing")
+        self.spacing = np.eye(3) * validate_nonnegative_float(spacing, "spacing")
 
         # find origin of volume
         self.origin = np.min(positions, axis=0) - boundary

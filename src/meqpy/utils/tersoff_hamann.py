@@ -1,7 +1,7 @@
 import numpy as np
 from numbers import Real
 
-from .types import is_nonnegative_float
+from .types import validate_nonnegative_float
 
 import scipy.constants as const
 
@@ -26,7 +26,7 @@ def ldos_to_rate(tip_radius: float, kappa: np.ndarray) -> np.ndarray:
         Renomalization factor for coupling strength.
     """
 
-    is_nonnegative_float(tip_radius, "tip_radius")
+    validate_nonnegative_float(tip_radius, "tip_radius")
 
     if isinstance(kappa, Real):
         kappa = np.array([kappa])

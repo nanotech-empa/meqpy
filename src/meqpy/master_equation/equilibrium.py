@@ -1,7 +1,7 @@
 import numpy as np
 from scipy.linalg import null_space
 import warnings
-from ..utils.types import is_stack_of_square_matrices, is_nonnegative_float
+from ..utils.types import validate_stack_of_square_matrices, validate_nonnegative_float
 
 
 def solve_equilibrium(W, tol=1e-12):
@@ -32,10 +32,10 @@ def solve_equilibrium(W, tol=1e-12):
     Diagonal of W is filled such that each column sums to zero before solving.
     """
     # check tol
-    is_nonnegative_float(tol, "tol")
+    validate_nonnegative_float(tol, "tol")
 
     # check W
-    is_stack_of_square_matrices(W, "W", dims=2)
+    validate_stack_of_square_matrices(W, "W", dims=2)
 
     # fill diagonal
     W = fill_diagonal(W)
@@ -94,7 +94,7 @@ def solve_equilibrium_nd(W: np.ndarray, tol=1e-12) -> np.ndarray:
         such that each column sums to zero before solving.
     """
     # check W
-    is_stack_of_square_matrices(W, "W")
+    validate_stack_of_square_matrices(W, "W")
 
     # prepare output
     Peq_shape = W.shape[:-1]
@@ -134,7 +134,7 @@ def fill_diagonal(W: np.ndarray) -> np.ndarray:
     """
 
     # check W
-    is_stack_of_square_matrices(W, "W")
+    validate_stack_of_square_matrices(W, "W")
 
     sum_over_cols = np.sum(W, axis=-2)
     diag_indices = np.arange(W.shape[-1])

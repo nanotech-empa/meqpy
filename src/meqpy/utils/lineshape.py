@@ -1,7 +1,7 @@
 from numbers import Real
 import numpy as np
 from scipy.special import erf
-from .types import ValidatedEnum, is_nonnegative_float
+from .types import ValidatedEnum, validate_nonnegative_float
 
 
 class LineShape(str, ValidatedEnum):
@@ -39,7 +39,7 @@ def lineshape_integral(lineshape: LineShape | str, x: float | np.ndarray, hwhm: 
     if not isinstance(x, (Real, np.ndarray)):
         raise TypeError(f"x must be Real or np.ndarray, but got {type(x)}")
 
-    is_nonnegative_float(hwhm, "hwhm")
+    validate_nonnegative_float(hwhm, "hwhm")
 
     if hwhm == 0:
         lineshape = LineShape.DIRAC

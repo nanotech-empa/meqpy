@@ -15,26 +15,25 @@ class ValidatedEnum(Enum):
         )
 
 
-def is_nonnegative_float(input: float, label: str) -> float:
-    """Verify input is real number and not negative."""
-    if not isinstance(input, Real):
-        raise TypeError(f"{label} has to be non-negative float but got {type(input)}")
-    if input < 0:
-        raise ValueError(f"{label} has to be non-negative float but got {input}")
-    return float(input)
+def _make_bounded_number_validator(caster, type_check, *, minimum=None):
+    def validator(value, name="value"):
+        if not isinstance(value, type_check):
+            raise TypeError(
+                f"{name} must be {type_check.__name__}, got {type(value).__name__}"
+            )
+        value = caster(value)
+        if minimum is not None and value < minimum:
+            raise ValueError(f"{name} must be >= {minimum}, got {value}")
+        return value
+
+    return validator
 
 
-def validate_nonnegative_int(value: int, label: str) -> int:
-    """Verify value is a non-negative integer."""
-    msg = f"{label} has to be a non-negative integer"
-    if not isinstance(value, int):
-        raise TypeError(f"{msg} but got {type(value).__name__}")
-    if value < 0:
-        raise ValueError(f"{msg} but got {value}")
-    return value
+validate_nonnegative_float = _make_bounded_number_validator(float, Real, minimum=0)
+validate_nonnegative_int = _make_bounded_number_validator(int, int, minimum=0)
 
 
-def is_real_or_1darray(value, name: str) -> np.ndarray:
+def validate_real_or_1darray(value, name: str) -> np.ndarray:
     """Check if value is real or np.ndarray of dimension 1, and convert to np.ndarray if it is real.
 
     Parameters
@@ -59,24 +58,24 @@ def is_real_or_1darray(value, name: str) -> np.ndarray:
     if isinstance(value, Real):
         return np.asarray([value])
 
+    msg = f"{name} must be float or 1D np.ndarray"
     if not isinstance(value, np.ndarray):
-        raise TypeError(
-            f"{name} must be float or 1D np.ndarray, but got {type(value)}."
-        )
+        raise TypeError(f"{msg}, but got {type(value).__name__}.")
 
     if value.ndim == 0:
         return np.asarray([value])
 
     if value.ndim > 1:
         raise ValueError(
-            f"{name} must be float or 1D np.ndarray, "
-            f"but got {value.ndim}D array with shape {value.shape}."
+            f"{msg}, but got {value.ndim}D array with shape {value.shape}."
         )
 
     return value
 
 
-def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None) -> bool:
+def validate_stack_of_square_matrices(
+    array: np.ndarray, name: str, dims: int = None
+) -> bool:
     """Raise error if array is not np.ndarray with last two dimensions of equal length.
     Optional: check if array is of dimension dims.
 
@@ -104,7 +103,7 @@ def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None) 
     """
 
     if not isinstance(array, np.ndarray):
-        raise TypeError(f"{name} must be np.ndarray, but got {type(array)}.")
+        raise TypeError(f"{name} must be np.ndarray, but got {type(array).__name__}.")
 
     elif type(dims) is not type(None) and array.ndim != dims:
         raise ValueError(
@@ -119,7 +118,7 @@ def is_stack_of_square_matrices(array: np.ndarray, name: str, dims: int = None) 
     return True
 
 
-def is_sequence_of_pairs(sequence: Sequence, val_type: type, name: str) -> bool:
+def validate_sequence_of_pairs(sequence: Sequence, val_type: type, name: str) -> bool:
     """Check if input is a Sequence of pairs, each containing two elements of type val_type.
 
     Parameters
@@ -142,15 +141,15 @@ def is_sequence_of_pairs(sequence: Sequence, val_type: type, name: str) -> bool:
         If sequence is not a Sequence
     """
     if not isinstance(sequence, Sequence):
-        raise TypeError(f"{name} must be Sequence, but got {type(sequence)}.")
+        raise TypeError(f"{name} must be Sequence, but got {type(sequence).__name__}.")
 
     for pair in sequence:
-        is_pair(pair, val_type, name=f"pair in {name}")
+        validate_pair(pair, val_type, name=f"pair in {name}")
 
     return True
 
 
-def is_pair(pair: Sequence, val_type: type, name: str) -> bool:
+def validate_pair(pair: Sequence, val_type: type, name: str) -> bool:
     """Check if pair is a Sequence of length 2, with each element being of type val_type
 
     Parameters
@@ -178,7 +177,7 @@ def is_pair(pair: Sequence, val_type: type, name: str) -> bool:
         Elements in sequence are not of type val_type.
     """
     if not isinstance(pair, Sequence):
-        raise TypeError(f"{name} must be Sequence, but got {type(pair)}.")
+        raise TypeError(f"{name} must be Sequence, but got {type(pair).__name__}.")
 
     if len(pair) != 2:
         raise IndexError(
@@ -189,7 +188,7 @@ def is_pair(pair: Sequence, val_type: type, name: str) -> bool:
     for value in pair:
         if not isinstance(value, val_type):
             raise TypeError(
-                f"Elements in {name} must be {val_type}, but got {type(value)}"
+                f"Elements in {name} must be {val_type}, but got {type(value).__name__}"
             )
 
     return True

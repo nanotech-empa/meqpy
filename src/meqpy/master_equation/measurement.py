@@ -1,5 +1,5 @@
 import numpy as np
-from ..utils.types import is_stack_of_square_matrices
+from ..utils.types import validate_stack_of_square_matrices
 
 
 def measurement(M: np.ndarray, P: np.ndarray) -> np.ndarray:
@@ -24,7 +24,7 @@ def measurement(M: np.ndarray, P: np.ndarray) -> np.ndarray:
     ValueError
         If last dimension of P does not match last dimensions of M.
     """
-    is_stack_of_square_matrices(M, "M")
+    validate_stack_of_square_matrices(M, "M")
 
     if not isinstance(P, np.ndarray):
         raise TypeError(f"P must be np.ndarray, but got {type(P)}.")
