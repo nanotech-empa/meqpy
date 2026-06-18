@@ -219,6 +219,22 @@ class System:
             raise IndexError(f"Index {state} for {name} state out of range.")
         return state
 
+    def _resolve_kappa_mode(self, kappa_mode: str | None) -> KappaMode:
+        """Return a :class:`KappaMode`, falling back to the instance default.
+
+        Parameters
+        ----------
+        kappa_mode : str | None
+            Name of the kappa mode to resolve. If ``None``, the instance
+            attribute ``_kappa_mode`` is returned unchanged.
+
+        Returns
+        -------
+        KappaMode
+            Resolved kappa mode.
+        """
+        return KappaMode(kappa_mode) if kappa_mode is not None else self._kappa_mode
+
     @property
     def num_states(self) -> int:
         """Number of states in system"""
@@ -591,10 +607,7 @@ class System:
             - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - deltaE + bias/2) / HBAR^2)*1e-10
         """
 
-        if kappa_mode is not None:
-            kappa_mode = KappaMode(kappa_mode)
-        else:
-            kappa_mode = self._kappa_mode
+        kappa_mode = self._resolve_kappa_mode(kappa_mode)
 
         bias = validate_real_or_1darray(bias, "bias")
 
@@ -609,3 +622,76 @@ class System:
 
     def __repr__(self):
         return f"System(name={self.name}, states={self.states})"
+
+    # ------------------------------------------------------------------
+    # To be used in child classes, e.g. Molecule or Lattice
+    # ------------------------------------------------------------------
+
+    def _state_tuple(
+        self, a: str | int, b: str | int, sorted: bool = True
+    ) -> tuple[str, str]:
+        """Return a ``(label_a, label_b)`` key, validating that both states exist.
+
+        Integer inputs are converted to their corresponding state labels;
+        string inputs are validated against the existing state registry.
+
+        Parameters
+        ----------
+        a : str | int
+            Label or index of the first state.
+        b : str | int
+            Label or index of the second state.
+        sorted : bool
+            Sort labels in tuple, default is True.
+
+        Returns
+        -------
+        tuple[str, str]
+            Tuple of state labels ``(label_a, label_b)``.
+
+        Raises
+        ------
+        KeyError
+            If a string label does not correspond to any known state.
+        IndexError
+            If an integer index is out of range.
+        """
+        a = self.states[self._resolve_index(a, "a")].label
+        b = self.states[self._resolve_index(b, "b")].label
+
+        if sorted:
+            return (min(a, b), max(a, b))
+        else:
+            return (a, b)
+
+    def _valid_charging_pair(
+        self, a: str | int, b: str | int, no_error: bool = False
+    ) -> bool:
+        """Check if two given states differ in charge by exactly 1.
+        If spin_selection_rule is True, check if ΔM=±1 as well.
+
+        Parameters
+        ----------
+        a : str | int
+            Label or index of first state.
+        b : str | int
+            Label or index of second state.
+
+        Returns
+        -------
+        bool
+            True if the two states differ in charge (and multiplicity) by exactly 1.
+        """
+        dQ = self.get_state(a).charge - self.get_state(b).charge
+        is_valid = abs(dQ) == 1
+
+        if self.spin_selection_rule:
+            dM = self.get_state(a).multiplicity - self.get_state(b).multiplicity
+            is_valid *= abs(dM) == 1
+
+        if not no_error and not is_valid:
+            raise ValueError(
+                f"States must differ in charge {'and multiplicity ' * self.spin_selection_rule}by 1."
+            )
+
+        return is_valid

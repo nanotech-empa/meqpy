@@ -10,6 +10,8 @@ from .system.state import State
 from .system.transition import Transition
 from .system.dyson import Dyson
 from .system.molecule import Molecule
+from .system.band_transition import BandTransition
+from .system.lattice import Lattice
 from .master_equation.equilibrium import (
     solve_equilibrium,
     solve_equilibrium_nd,
@@ -23,6 +25,8 @@ __all__ = [
     "Transition",
     "Dyson",
     "Molecule",
+    "BandTransition",
+    "Lattice",
     "solve_equilibrium",
     "solve_equilibrium_nd",
     "fill_diagonal",
