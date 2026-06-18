@@ -9,6 +9,7 @@ from ..utils import decay_constant, lineshape_integral
 from typing import Optional, Sequence
 import numpy as np
 import scipy.constants as const
+from numbers import Real
 
 ELEMENTARY_CHARGE = const.elementary_charge  # C
 HBAR = const.hbar  # J·s
@@ -361,6 +362,61 @@ class System:
         mat[final, initial] = 1.0
         if symmetric:
             mat[initial, final] = 1.0
+        return mat
+
+    def rescale_by_states(
+        self,
+        initial: int | str,
+        final: int | str,
+        value: float,
+        symmetric: bool = False,
+    ) -> np.ndarray:
+        """Return array for rescaling a single entry in the hopping matrix.
+
+        Parameters
+        ----------
+        initial : int | str
+            Label or index of initial state.
+        final : int | str
+            Label or index of final state.
+        value: float
+            Rescaling value for that transition
+        symmetric : bool, optional
+            Make array symmetric, by default False
+
+        Returns
+        -------
+        matrix : (N,N) np.ndarray
+            Matrix of shape (n,n) with
+            - n being number of states in system
+            - all entries are 1
+            - matrix[final,inital] = value
+            - matrix[initial,final] = value, if symmetric is True
+
+        Raises
+        ------
+        IndexError
+            If `initial` or `final` parameter are out of range.
+        """
+        if not isinstance(initial, int):
+            initial = self.get_index(initial)
+        elif initial < 0 or initial >= self.num_states:
+            raise IndexError(f"Index {initial} for initial state out of range.")
+
+        if not isinstance(final, int):
+            final = self.get_index(final)
+        elif final < 0 or final >= self.num_states:
+            raise IndexError(f"Index {final} for final state out of range.")
+
+        if not isinstance(value, Real):
+            raise TypeError(
+                f"value must be real number, but got type {type(value).__name__}"
+            )
+
+        mat = self.ones
+        mat[final, initial] = value
+        if symmetric:
+            mat[initial, final] = value
         return mat
 
     def normalized_charging_transitions(
