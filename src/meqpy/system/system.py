@@ -188,12 +188,8 @@ class System:
         ValueError
             If given label cannot be be found in system.
         """
-        if isinstance(label, int):
-            return self.states[label]
-        for state in self.states:
-            if state.label == label:
-                return state
-        raise ValueError(f"State with label {label} not found in the system.")
+        label = self._resolve_index(label, "label")
+        return self.states[label]
 
     def get_index(self, label: str) -> int:
         """Get index of state for given label.
@@ -217,6 +213,14 @@ class System:
             if state.label == label:
                 return i
         raise ValueError(f"State with label {label} not found in the system.")
+
+    def _resolve_index(self, state: int | str, name: str) -> int:
+        """Convert a state label to an index, or validate an integer index."""
+        if not isinstance(state, int):
+            return self.get_index(state)
+        if state < 0 or state >= self.num_states:
+            raise IndexError(f"Index {state} for {name} state out of range.")
+        return state
 
     @property
     def num_states(self) -> int:
@@ -348,15 +352,8 @@ class System:
         IndexError
             If `initial` or `final` parameter are out of range.
         """
-        if not isinstance(initial, int):
-            initial = self.get_index(initial)
-        elif initial < 0 or initial >= self.num_states:
-            raise IndexError(f"Index {initial} for initial state out of range.")
-
-        if not isinstance(final, int):
-            final = self.get_index(final)
-        elif final < 0 or final >= self.num_states:
-            raise IndexError(f"Index {final} for final state out of range.")
+        initial = self._resolve_index(initial, "initial")
+        final = self._resolve_index(final, "final")
 
         mat = self.zeros
         mat[final, initial] = 1.0
@@ -398,15 +395,8 @@ class System:
         IndexError
             If `initial` or `final` parameter are out of range.
         """
-        if not isinstance(initial, int):
-            initial = self.get_index(initial)
-        elif initial < 0 or initial >= self.num_states:
-            raise IndexError(f"Index {initial} for initial state out of range.")
-
-        if not isinstance(final, int):
-            final = self.get_index(final)
-        elif final < 0 or final >= self.num_states:
-            raise IndexError(f"Index {final} for final state out of range.")
+        initial = self._resolve_index(initial, "initial")
+        final = self._resolve_index(final, "final")
 
         if not isinstance(value, Real):
             raise TypeError(
