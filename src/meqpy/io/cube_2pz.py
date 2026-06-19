@@ -75,7 +75,9 @@ class Cube_2pz(Cube):
         """
 
         if not isinstance(boundary, Real):
-            raise TypeError(f"Boundary must be real but got type {type(boundary)}")
+            raise TypeError(
+                f"Boundary must be real but got type {type(boundary).__name__}"
+            )
 
         self.boundary = boundary
 
@@ -103,7 +105,7 @@ class Cube_2pz(Cube):
         elements : np.ndarray
             List of elements of hopping sites, defaults to carbon.
         """
-        if type(elements) is type(None):
+        if elements is None:
             elements = np.zeros(positions.shape[0])
             elements.fill(6)
 

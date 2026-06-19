@@ -83,7 +83,9 @@ class Molecule(System):
             If given states are not valid for charging transition.
         """
         if not isinstance(dyson, Dyson):
-            raise TypeError(f"dyson must be type Dyson, but got type {type(dyson)}")
+            raise TypeError(
+                f"dyson must be type Dyson, but got type {type(dyson).__name__}"
+            )
 
         if not self._valid_charging_pair(a, b):
             raise ValueError(
@@ -154,11 +156,15 @@ class Molecule(System):
     @dyson_dict.setter
     def dyson_dict(self, dysons: dict[tuple[str, str], Dyson]):
         if not isinstance(dysons, dict):
-            raise TypeError(f"dysons must be dictionary but got {type(Dyson)}")
+            raise TypeError(
+                f"dysons must be dictionary but got {type(dysons).__name__}"
+            )
 
         for key, dyson in dysons.items():
             if not isinstance(key, tuple):
-                raise TypeError(f"key must be tuple with length 2, but got {type(key)}")
+                raise TypeError(
+                    f"key must be tuple with length 2, but got {type(key).__name__}"
+                )
 
             if len(key) != 2:
                 raise TypeError(
@@ -240,7 +246,7 @@ class Molecule(System):
             if key is not of length 2.
         """
         if not isinstance(key, tuple):
-            raise TypeError(f"key must be tuple, but got {type(key)}.")
+            raise TypeError(f"key must be tuple, but got {type(key).__name__}.")
 
         if len(key) != 2:
             raise ValueError("key must be of length 2.")
@@ -273,7 +279,9 @@ class Molecule(System):
             return None
 
         if not isinstance(attr_name, str):
-            raise TypeError(f"attr_name must be string, but got type {type(attr_name)}")
+            raise TypeError(
+                f"attr_name must be string, but got type {type(attr_name).__name__}"
+            )
 
         # pick random dyson orbital as reference
         keys = list(self._dyson_dict.keys())
@@ -282,7 +290,7 @@ class Molecule(System):
 
         if not isinstance(attr, np.ndarray):
             raise TypeError(
-                f"{attr_name} must be np.ndarray, but found type {type(attr)}"
+                f"{attr_name} must be np.ndarray, but found type {type(attr).__name__}"
             )
 
         # check all remaining dysons have the same axis values
@@ -445,7 +453,7 @@ class Molecule(System):
         """
         if not isinstance(scale_by_dyson, bool):
             raise TypeError(
-                f"scale_by_dyson must be bool, but got {type(scale_by_dyson)}"
+                f"scale_by_dyson must be bool, but got {type(scale_by_dyson).__name__}"
             )
 
         charging_rates_mat = super().charging_rates(z, bias, kappa_mode, squeeze=False)

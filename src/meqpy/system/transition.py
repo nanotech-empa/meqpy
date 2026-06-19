@@ -75,7 +75,7 @@ class Transition:
         """
 
         if not isinstance(cube, Cube):
-            raise TypeError(f"cube must be of type Cube, but got {type(cube)}")
+            raise TypeError(f"cube must be of type Cube, but got {type(cube).__name__}")
 
         self.spacing = cube.spacing
 

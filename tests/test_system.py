@@ -46,7 +46,7 @@ def test_add_state_wrong_type():
     system = System()
     with pytest.raises(TypeError) as e_info:
         system.add_state("not a state")
-    assert str(e_info.value) == "state has to be State class, but got <class 'str'>"
+    assert str(e_info.value) == "state has to be State class, but got str"
 
 
 def test_get_index_missing_label():
