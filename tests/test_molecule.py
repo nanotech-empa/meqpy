@@ -145,3 +145,46 @@ def test_charging_rates_scaled_by_dyson_amplitude(cube_path):
     # scaled rates should be exactly `amplitude` times the unscaled ones,
     # wherever a Dyson orbital was assigned
     assert np.allclose(rates_scaled[0, 1], 2.0 * rates_unscaled[0, 1], atol=1e-9)
+
+
+def test_charging_rates_dyson(cube_path):
+    molecule = make_molecule(padding=5)
+    dyson = Dyson(cube_path("cartesian"))
+    molecule.add_dyson("GS", "PIR", dyson)
+    bias = np.linspace(-1, 1, 5)
+
+    warn_msg = (
+        "Some charging transition have not been assigned a Dyson instance."
+        " Will scale corresponding transitions to zero."
+    )
+    with pytest.warns() as w_info:
+        rates = molecule.charging_rates_dyson(z=5.0, bias=bias)
+
+    assert rates.shape == (30, 30, 5, 3, 3)
+    assert str(w_info[0].message) == warn_msg
+
+
+def test_get_xy_points(cube_path):
+    molecule = make_molecule(padding=5)
+    dyson = Dyson(cube_path("rhombic"))
+    molecule.add_dyson("GS", "PIR", dyson)
+
+    assert molecule.get_xy_indices((-1.41336, -0.65322)) == (7, 8)
+
+
+def test_charging_rates_pointspec(cube_path):
+    molecule = make_molecule(padding=5)
+    dyson = Dyson(cube_path("rhombic"))
+    molecule.add_dyson("GS", "PIR", dyson)
+
+    xy_rates = molecule.charging_rates_dyson(z=5.0, bias=0.0)
+    points = [(7, 8), (14, 3)]
+    point_rates = molecule.charging_rates_pointspec(
+        points=points,
+        z=5.0,
+        bias=0.0,
+    )
+
+    assert len(point_rates) == len(points)
+    assert np.allclose(point_rates[0], xy_rates[7, 8, ...], atol=1e-9)
+    assert np.allclose(point_rates[1], xy_rates[14, 3, ...], atol=1e-9)
