@@ -1,0 +1,147 @@
+import numpy as np
+import pytest
+from meqpy.system import Dyson, Molecule, State
+
+
+def make_molecule(**kwargs):
+    """Build a small Molecule with GS, PIR, NIR states (no Dyson orbitals attached)."""
+    states = [
+        State("GS", 0.0, 0, multiplicity=1),
+        State("PIR", 0.5, 1, multiplicity=2),
+        State("NIR", 0.3, -1, multiplicity=2),
+    ]
+    defaults = dict(hwhm=0.0, lineshape="dirac", workfunction=5.0, kappa_mode="10")
+    defaults.update(kwargs)
+    return Molecule(states=states, **defaults)
+
+
+def test_init_with_kwargs():
+    molecule = make_molecule(tip_radius=3.0, padding=2)
+    assert molecule.tip_radius == 3.0
+    assert molecule.padding == 2
+
+
+def test_add_and_get_dyson(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+
+    molecule.add_dyson("PIR", "GS", dyson)
+
+    assert molecule.dyson_dict == {("GS", "PIR"): dyson}
+    assert molecule.missing_dysons == {("GS", "NIR")}
+
+
+def test_add_dyson_wrong_type():
+    molecule = make_molecule()
+    with pytest.raises(TypeError) as e_info:
+        molecule.add_dyson("GS", "PIR", "not a dyson")
+    assert str(e_info.value) == "dyson must be type Dyson, but got type str"
+
+
+def test_add_dyson_invalid_charging_pair(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+
+    # PIR -> NIR differs in charge by 2, not a valid charging transition
+    with pytest.raises(ValueError) as e_info:
+        molecule.add_dyson("PIR", "NIR", dyson)
+    assert str(e_info.value) == "States must differ in charge and multiplicity by 1."
+
+
+def test_dyson_dict_setter(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+
+    molecule.dyson_dict = {("GS", "PIR"): dyson}
+    assert molecule.dyson_dict == {("GS", "PIR"): dyson}
+
+
+def test_dyson_dict_setter_wrong_type():
+    molecule = make_molecule()
+    with pytest.raises(TypeError) as e_info:
+        molecule.dyson_dict = "not a dict"
+    assert str(e_info.value) == "dysons must be dictionary but got str"
+
+
+def test_dyson_dict_setter_wrong_key_type(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+    with pytest.raises(TypeError) as e_info:
+        molecule.dyson_dict = {"GS": dyson}
+    assert str(e_info.value) == "key must be tuple with length 2, but got str"
+
+
+def test_dyson_dict_setter_wrong_key_length(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+    with pytest.raises(TypeError) as e_info:
+        molecule.dyson_dict = {("GS",): dyson}
+    assert str(e_info.value) == "key must have length 2, but got Iterator of length 1"
+
+
+def test_dyson_key_to_indices(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+    molecule.add_dyson("GS", "PIR", dyson)
+
+    assert molecule.dyson_key_to_indices(("GS", "PIR")) == (0, 1)
+
+
+def test_dyson_key_to_indices_wrong_length():
+    molecule = make_molecule()
+    with pytest.raises(ValueError) as e_info:
+        molecule.dyson_key_to_indices(("GS", "PIR", "NIR"))
+    assert str(e_info.value) == "key must be of length 2."
+
+
+def test_dyson_shape_and_molecule_shape(cube_path):
+    molecule = make_molecule(padding=2)
+    dyson = Dyson(cube_path("cartesian"))
+    molecule.add_dyson("GS", "PIR", dyson)
+
+    nx, ny = dyson.shape
+    assert molecule.dyson_shape == (nx + 4, ny + 4)
+    assert molecule.shape == (nx + 4, ny + 4, 3, 3)
+
+
+def test_dyson_shape_mismatch_raises(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+    molecule.add_dyson("GS", "PIR", dyson)
+
+    # patch in a second dyson with a different shape to trigger the mismatch
+    other = Dyson(cube_path("cartesian"))
+    other.data = other.data[:-1, :]
+    molecule.add_dyson("GS", "NIR", other)
+
+    with pytest.raises(ValueError) as e_info:
+        molecule.dyson_shape
+    assert str(e_info.value) == "Dysons do not have same shape."
+
+
+def test_dyson_amplitudes(cube_path):
+    molecule = make_molecule()
+    dyson_gs_pir = Dyson(cube_path("cartesian"))
+    dyson_gs_pir.amplitude = 2.0
+    molecule.add_dyson("GS", "PIR", dyson_gs_pir)
+
+    amps = molecule.dyson_amplitudes
+    expected = np.zeros((3, 3))
+    expected[0, 1] = 2.0
+    expected[1, 0] = 2.0
+    assert np.allclose(amps, expected, atol=1e-6)
+
+
+def test_charging_rates_scaled_by_dyson_amplitude(cube_path):
+    molecule = make_molecule()
+    dyson = Dyson(cube_path("cartesian"))
+    dyson.amplitude = 2.0
+    molecule.add_dyson("GS", "PIR", dyson)
+
+    rates_scaled = molecule.charging_rates(z=5.0, bias=0.0, scale_by_dyson=True)
+    rates_unscaled = molecule.charging_rates(z=5.0, bias=0.0, scale_by_dyson=False)
+
+    assert rates_scaled.shape == (3, 3)
+    # scaled rates should be exactly `amplitude` times the unscaled ones,
+    # wherever a Dyson orbital was assigned
+    assert np.allclose(rates_scaled[0, 1], 2.0 * rates_unscaled[0, 1], atol=1e-9)
