@@ -35,7 +35,9 @@ class State:
     @label.setter
     def label(self, new_label: str):
         if not isinstance(new_label, str):
-            raise TypeError(f"label must be a string, but got {type(new_label)}.")
+            raise TypeError(
+                f"label must be a string, but got {type(new_label).__name__}."
+            )
         self._label = new_label
 
     @property
@@ -47,7 +49,7 @@ class State:
     def energy(self, new_energy):
         if not isinstance(new_energy, Real):
             raise TypeError(
-                f"energy must be a real number, but got {type(new_energy)}."
+                f"energy must be a real number, but got {type(new_energy).__name__}."
             )
         self._energy = float(new_energy)
 
@@ -59,7 +61,9 @@ class State:
     @charge.setter
     def charge(self, new_charge):
         if not isinstance(new_charge, int):
-            raise TypeError(f"charge must be an integer, but got {type(new_charge)}.")
+            raise TypeError(
+                f"charge must be an integer, but got {type(new_charge).__name__}."
+            )
         self._charge = new_charge
 
     @property
@@ -71,7 +75,7 @@ class State:
     def multiplicity(self, new_multiplicity):
         if not isinstance(new_multiplicity, int):
             raise TypeError(
-                f"multiplicity must be an integer, but got {type(new_multiplicity)}."
+                f"multiplicity must be an integer, but got {type(new_multiplicity).__name__}."
             )
         if new_multiplicity <= 0:
             raise ValueError(

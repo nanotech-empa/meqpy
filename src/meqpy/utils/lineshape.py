@@ -34,10 +34,12 @@ def lineshape_integral(lineshape: LineShape | str, x: float | np.ndarray, hwhm: 
         lineshape = LineShape(lineshape)
 
     if not isinstance(lineshape, LineShape):
-        raise TypeError(f"lineshape must be type LineShape, but got {type(lineshape)}")
+        raise TypeError(
+            f"lineshape must be type LineShape, but got {type(lineshape).__name__}"
+        )
 
     if not isinstance(x, (Real, np.ndarray)):
-        raise TypeError(f"x must be Real or np.ndarray, but got {type(x)}")
+        raise TypeError(f"x must be Real or np.ndarray, but got {type(x).__name__}")
 
     validate_nonnegative_float(hwhm, "hwhm")
 

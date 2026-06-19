@@ -67,7 +67,7 @@ class Dyson(Transition):
 
         if not isinstance(slice_height, Real):
             raise TypeError(
-                f"slice_height must be of type float, but got {type(slice_height)}"
+                f"slice_height must be of type float, but got {type(slice_height).__name__}"
             )
 
         super().parse_cube_dimensions(cube=cube, center_mass=center_mass)
@@ -136,7 +136,9 @@ class Dyson(Transition):
             kappa = np.array([kappa])
 
         if not isinstance(kappa, np.ndarray):
-            raise TypeError(f"kappa must be Real or np.ndarray, but got {type(kappa)}")
+            raise TypeError(
+                f"kappa must be Real or np.ndarray, but got {type(kappa).__name__}"
+            )
 
         if (kappa <= 0).any():
             raise ValueError("kappa must be positive.")
@@ -146,7 +148,7 @@ class Dyson(Transition):
 
         if not isinstance(pad, int):
             raise TypeError(
-                f"pad must be of type int and non-negative, but got {type(pad)}"
+                f"pad must be of type int and non-negative, but got {type(pad).__name__}"
             )
 
         validate_nonnegative_int(pad, "pad")

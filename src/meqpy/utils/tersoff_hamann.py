@@ -32,7 +32,7 @@ def ldos_to_rate(tip_radius: float, kappa: np.ndarray) -> np.ndarray:
         kappa = np.array([kappa])
     elif not isinstance(kappa, np.ndarray):
         raise TypeError(
-            f"kappa must be a real number or np.ndarray but got {type(kappa)}."
+            f"kappa must be a real number or np.ndarray but got {type(kappa).__name__}."
         )
 
     return (

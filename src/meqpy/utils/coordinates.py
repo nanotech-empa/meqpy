@@ -7,7 +7,9 @@ def pad_lin_extrapolate(array: np.ndarray, pad: int) -> np.ndarray:
     array = validate_real_or_1darray(array, "array")
 
     if not isinstance(pad, int):
-        raise ValueError(f"pad must be a non-negative integer, got {type(pad)}.")
+        raise ValueError(
+            f"pad must be a non-negative integer, got {type(pad).__name__}."
+        )
 
     if pad < 0:
         raise ValueError(f"pad must be a non-negative integer, got {pad}.")
@@ -52,10 +54,10 @@ def value_to_index(value: float, array: np.ndarray) -> int:
     """
 
     if not isinstance(value, Real):
-        TypeError(f"value must be of type Real, but got {type(value)}.")
+        TypeError(f"value must be of type Real, but got {type(value).__name__}.")
 
     if not isinstance(array, np.ndarray):
-        TypeError(f"array must be np.ndarray, but got {type(array)}")
+        TypeError(f"array must be np.ndarray, but got {type(array).__name__}")
 
     if array.ndim != 1:
         TypeError(

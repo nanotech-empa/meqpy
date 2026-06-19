@@ -56,13 +56,15 @@ def decay_constant(
 
     if not isinstance(kappa_mode, KappaMode):
         raise TypeError(
-            f"kappa_mode must be type KappaMode, but got {type(kappa_mode)}"
+            f"kappa_mode must be type KappaMode, but got {type(kappa_mode).__name__}"
         )
 
     bias = validate_real_or_1darray(bias, "bias")
 
     if not isinstance(delta, (Real, np.ndarray)):
-        raise TypeError(f"delta must be Real or np.ndarray, but got {type(delta)}")
+        raise TypeError(
+            f"delta must be Real or np.ndarray, but got {type(delta).__name__}"
+        )
 
     delta = np.asarray(delta)
 

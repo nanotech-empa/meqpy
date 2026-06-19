@@ -148,7 +148,9 @@ class System:
             If state is not instance of State class.
         """
         if not isinstance(state, State):
-            raise TypeError(f"state has to be State class, but got {type(state)}")
+            raise TypeError(
+                f"state has to be State class, but got {type(state).__name__}"
+            )
         try:
             position = self.get_index(state.label)
         except ValueError:
@@ -166,7 +168,7 @@ class System:
     def spin_selection_rule(self, spin_selection_rule: bool):
         if not isinstance(spin_selection_rule, bool):
             raise TypeError(
-                f"spin_selection_rule must be bool, but got type {type(spin_selection_rule)}"
+                f"spin_selection_rule must be bool, but got type {type(spin_selection_rule).__name__}"
             )
         self._spin_selection_rule = spin_selection_rule
 
