@@ -15,6 +15,13 @@ def make_molecule(**kwargs):
     return Molecule(states=states, **defaults)
 
 
+def make_molecule_with_dyson(dyson_path, **kwargs):
+    molecule = make_molecule(**kwargs)
+    dyson = Dyson(dyson_path)
+    molecule.add_dyson("GS", "PIR", dyson)
+    return molecule, dyson
+
+
 def test_init_with_kwargs():
     molecule = make_molecule(tip_radius=3.0, padding=2)
     assert molecule.tip_radius == 3.0
@@ -22,11 +29,7 @@ def test_init_with_kwargs():
 
 
 def test_add_and_get_dyson(cube_path):
-    molecule = make_molecule()
-    dyson = Dyson(cube_path("cartesian"))
-
-    molecule.add_dyson("PIR", "GS", dyson)
-
+    molecule, dyson = make_molecule_with_dyson(cube_path("cartesian"))
     assert molecule.dyson_dict == {("GS", "PIR"): dyson}
     assert molecule.missing_dysons == {("GS", "NIR")}
 
@@ -80,10 +83,7 @@ def test_dyson_dict_setter_wrong_key_length(cube_path):
 
 
 def test_dyson_key_to_indices(cube_path):
-    molecule = make_molecule()
-    dyson = Dyson(cube_path("cartesian"))
-    molecule.add_dyson("GS", "PIR", dyson)
-
+    molecule, _ = make_molecule_with_dyson(cube_path("cartesian"))
     assert molecule.dyson_key_to_indices(("GS", "PIR")) == (0, 1)
 
 
@@ -95,9 +95,7 @@ def test_dyson_key_to_indices_wrong_length():
 
 
 def test_dyson_shape_and_molecule_shape(cube_path):
-    molecule = make_molecule(padding=2)
-    dyson = Dyson(cube_path("cartesian"))
-    molecule.add_dyson("GS", "PIR", dyson)
+    molecule, dyson = make_molecule_with_dyson(cube_path("cartesian"), padding=2)
 
     nx, ny = dyson.shape
     assert molecule.dyson_shape == (nx + 4, ny + 4)
@@ -105,9 +103,7 @@ def test_dyson_shape_and_molecule_shape(cube_path):
 
 
 def test_dyson_shape_mismatch_raises(cube_path):
-    molecule = make_molecule()
-    dyson = Dyson(cube_path("cartesian"))
-    molecule.add_dyson("GS", "PIR", dyson)
+    molecule, dyson = make_molecule_with_dyson(cube_path("cartesian"))
 
     # patch in a second dyson with a different shape to trigger the mismatch
     other = Dyson(cube_path("cartesian"))
@@ -148,34 +144,28 @@ def test_charging_rates_scaled_by_dyson_amplitude(cube_path):
 
 
 def test_charging_rates_dyson(cube_path):
-    molecule = make_molecule(padding=5)
-    dyson = Dyson(cube_path("cartesian"))
-    molecule.add_dyson("GS", "PIR", dyson)
+    molecule, _ = make_molecule_with_dyson(cube_path("cartesian"), padding=5)
+
     bias = np.linspace(-1, 1, 5)
+    with pytest.warns() as w_info:
+        rates = molecule.charging_rates_dyson(z=5.0, bias=bias)
+
+    assert rates.shape == (30, 30, 5, 3, 3)
 
     warn_msg = (
         "Some charging transition have not been assigned a Dyson instance."
         " Will scale corresponding transitions to zero."
     )
-    with pytest.warns() as w_info:
-        rates = molecule.charging_rates_dyson(z=5.0, bias=bias)
-
-    assert rates.shape == (30, 30, 5, 3, 3)
     assert str(w_info[0].message) == warn_msg
 
 
 def test_get_xy_points(cube_path):
-    molecule = make_molecule(padding=5)
-    dyson = Dyson(cube_path("rhombic"))
-    molecule.add_dyson("GS", "PIR", dyson)
-
+    molecule, _ = make_molecule_with_dyson(cube_path("rhombic"), padding=5)
     assert molecule.get_xy_indices((-1.41336, -0.65322)) == (7, 8)
 
 
 def test_charging_rates_pointspec(cube_path):
-    molecule = make_molecule(padding=5)
-    dyson = Dyson(cube_path("rhombic"))
-    molecule.add_dyson("GS", "PIR", dyson)
+    molecule, _ = make_molecule_with_dyson(cube_path("cartesian"), padding=5)
 
     xy_rates = molecule.charging_rates_dyson(z=5.0, bias=0.0)
     points = [(7, 8), (14, 3)]
