@@ -38,7 +38,7 @@ def test_add_dyson_wrong_type():
     molecule = make_molecule()
     with pytest.raises(TypeError) as e_info:
         molecule.add_dyson("GS", "PIR", "not a dyson")
-    assert str(e_info.value) == "dyson must be type Dyson, but got type str"
+    assert str(e_info.value) == "dyson must be Dyson, but got str"
 
 
 def test_add_dyson_invalid_charging_pair(cube_path):
@@ -63,7 +63,7 @@ def test_dyson_dict_setter_wrong_type():
     molecule = make_molecule()
     with pytest.raises(TypeError) as e_info:
         molecule.dyson_dict = "not a dict"
-    assert str(e_info.value) == "dysons must be dictionary but got str"
+    assert str(e_info.value) == "dysons must be dict, but got str"
 
 
 def test_dyson_dict_setter_wrong_key_type(cube_path):
@@ -71,7 +71,7 @@ def test_dyson_dict_setter_wrong_key_type(cube_path):
     dyson = Dyson(cube_path("cartesian"))
     with pytest.raises(TypeError) as e_info:
         molecule.dyson_dict = {"GS": dyson}
-    assert str(e_info.value) == "key must be tuple with length 2, but got str"
+    assert str(e_info.value) == "key must be tuple, but got str"
 
 
 def test_dyson_dict_setter_wrong_key_length(cube_path):

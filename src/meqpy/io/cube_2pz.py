@@ -2,7 +2,11 @@ import numpy as np
 from ase.atoms import Atoms
 from ase.units import Bohr
 from .cube import Cube
-from ..utils.types import validate_real_or_1darray, validate_nonnegative_float
+from ..utils.types import (
+    validate_real_or_1darray,
+    validate_nonnegative_float,
+    require_type,
+)
 from numbers import Real
 
 
@@ -74,10 +78,7 @@ class Cube_2pz(Cube):
             Step size of cube grid.
         """
 
-        if not isinstance(boundary, Real):
-            raise TypeError(
-                f"Boundary must be real but got type {type(boundary).__name__}"
-            )
+        require_type(boundary, Real, "boundary")
 
         self.boundary = boundary
 

@@ -4,6 +4,7 @@ from ..utils import (
     KappaMode,
     validate_real_or_1darray,
     validate_nonnegative_float,
+    require_type,
 )
 from ..utils import decay_constant, lineshape_integral
 from typing import Optional, Sequence
@@ -147,10 +148,7 @@ class System:
         TypeError
             If state is not instance of State class.
         """
-        if not isinstance(state, State):
-            raise TypeError(
-                f"state has to be State class, but got {type(state).__name__}"
-            )
+        require_type(state, State, "state")
         try:
             position = self.get_index(state.label)
         except ValueError:
@@ -166,10 +164,7 @@ class System:
 
     @spin_selection_rule.setter
     def spin_selection_rule(self, spin_selection_rule: bool):
-        if not isinstance(spin_selection_rule, bool):
-            raise TypeError(
-                f"spin_selection_rule must be bool, but got type {type(spin_selection_rule).__name__}"
-            )
+        require_type(spin_selection_rule, bool, "spin_selection_rule")
         self._spin_selection_rule = spin_selection_rule
 
     def get_state(self, label: str | int) -> State:
@@ -400,10 +395,7 @@ class System:
         initial = self._resolve_index(initial, "initial")
         final = self._resolve_index(final, "final")
 
-        if not isinstance(value, Real):
-            raise TypeError(
-                f"value must be real number, but got type {type(value).__name__}"
-            )
+        require_type(value, Real)
 
         mat = self.ones
         mat[final, initial] = value

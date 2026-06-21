@@ -5,6 +5,7 @@ from .types import (
     validate_stack_of_square_matrices,
     validate_sequence_of_pairs,
     validate_pair,
+    require_type,
 )
 from .decay_constant import KappaMode, decay_constant
 from .lineshape import LineShape, lineshape_integral
@@ -20,6 +21,7 @@ __all__ = [
     "validate_stack_of_square_matrices",
     "validate_sequence_of_pairs",
     "validate_pair",
+    "require_type",
     "decay_constant",
     "lineshape_integral",
     "pad_lin_extrapolate",

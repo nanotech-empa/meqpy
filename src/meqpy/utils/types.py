@@ -33,6 +33,14 @@ validate_nonnegative_float = _make_bounded_number_validator(float, Real, minimum
 validate_nonnegative_int = _make_bounded_number_validator(int, int, minimum=0)
 
 
+def require_type(value: object, expected: type, name="value"):
+    if not isinstance(value, expected):
+        types = expected if isinstance(expected, tuple) else (expected,)
+        want = " or ".join(t.__name__ for t in types)
+        raise TypeError(f"{name} must be {want}, but got {type(value).__name__}")
+    return value
+
+
 def validate_real_or_1darray(value, name: str) -> np.ndarray:
     """Check if value is real or np.ndarray of dimension 1, and convert to np.ndarray if it is real.
 

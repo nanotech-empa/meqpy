@@ -6,6 +6,7 @@ from ..utils.types import (
     validate_nonnegative_int,
     validate_sequence_of_pairs,
     validate_pair,
+    require_type,
 )
 from ..utils.decay_constant import KappaMode
 from ..utils.coordinates import pad_lin_extrapolate
@@ -82,10 +83,7 @@ class Molecule(System):
         ValueError
             If given states are not valid for charging transition.
         """
-        if not isinstance(dyson, Dyson):
-            raise TypeError(
-                f"dyson must be type Dyson, but got type {type(dyson).__name__}"
-            )
+        require_type(dyson, Dyson, "dyson")
 
         if not self._valid_charging_pair(a, b):
             raise ValueError(
@@ -155,16 +153,10 @@ class Molecule(System):
 
     @dyson_dict.setter
     def dyson_dict(self, dysons: dict[tuple[str, str], Dyson]):
-        if not isinstance(dysons, dict):
-            raise TypeError(
-                f"dysons must be dictionary but got {type(dysons).__name__}"
-            )
+        require_type(dysons, dict, "dysons")
 
         for key, dyson in dysons.items():
-            if not isinstance(key, tuple):
-                raise TypeError(
-                    f"key must be tuple with length 2, but got {type(key).__name__}"
-                )
+            require_type(key, tuple, "key")
 
             if len(key) != 2:
                 raise TypeError(
@@ -245,8 +237,7 @@ class Molecule(System):
         ValueError
             if key is not of length 2.
         """
-        if not isinstance(key, tuple):
-            raise TypeError(f"key must be tuple, but got {type(key).__name__}.")
+        require_type(key, tuple, "key")
 
         if len(key) != 2:
             raise ValueError("key must be of length 2.")
@@ -278,20 +269,14 @@ class Molecule(System):
         if not len(self._dyson_dict.keys()):
             return None
 
-        if not isinstance(attr_name, str):
-            raise TypeError(
-                f"attr_name must be string, but got type {type(attr_name).__name__}"
-            )
+        require_type(attr_name, str, "attr_name")
 
         # pick random dyson orbital as reference
         keys = list(self._dyson_dict.keys())
         key = keys.pop(0)
         attr = getattr(self._dyson_dict[key], attr_name)
 
-        if not isinstance(attr, np.ndarray):
-            raise TypeError(
-                f"{attr_name} must be np.ndarray, but found type {type(attr).__name__}"
-            )
+        require_type(attr, np.ndarray, "attr_name")
 
         # check all remaining dysons have the same axis values
         for key in keys:
@@ -451,10 +436,7 @@ class Molecule(System):
             * `self.clebsch_gordan_factors`
             * `self.dyson_amplitudes`
         """
-        if not isinstance(scale_by_dyson, bool):
-            raise TypeError(
-                f"scale_by_dyson must be bool, but got {type(scale_by_dyson).__name__}"
-            )
+        require_type(scale_by_dyson, bool, "scale_by_dyson")
 
         charging_rates_mat = super().charging_rates(z, bias, kappa_mode, squeeze=False)
         if scale_by_dyson:

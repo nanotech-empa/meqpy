@@ -1,4 +1,5 @@
 from numbers import Real
+from ..utils import require_type
 
 
 class State:
@@ -34,10 +35,7 @@ class State:
 
     @label.setter
     def label(self, new_label: str):
-        if not isinstance(new_label, str):
-            raise TypeError(
-                f"label must be a string, but got {type(new_label).__name__}."
-            )
+        require_type(new_label, str, "new_label")
         self._label = new_label
 
     @property
@@ -47,10 +45,7 @@ class State:
 
     @energy.setter
     def energy(self, new_energy):
-        if not isinstance(new_energy, Real):
-            raise TypeError(
-                f"energy must be a real number, but got {type(new_energy).__name__}."
-            )
+        require_type(new_energy, Real, "new_energy")
         self._energy = float(new_energy)
 
     @property
@@ -60,10 +55,7 @@ class State:
 
     @charge.setter
     def charge(self, new_charge):
-        if not isinstance(new_charge, int):
-            raise TypeError(
-                f"charge must be an integer, but got {type(new_charge).__name__}."
-            )
+        require_type(new_charge, int, "new_charge")
         self._charge = new_charge
 
     @property
@@ -73,10 +65,7 @@ class State:
 
     @multiplicity.setter
     def multiplicity(self, new_multiplicity):
-        if not isinstance(new_multiplicity, int):
-            raise TypeError(
-                f"multiplicity must be an integer, but got {type(new_multiplicity).__name__}."
-            )
+        require_type(new_multiplicity, int, "new_multiplicity")
         if new_multiplicity <= 0:
             raise ValueError(
                 f"multiplicity must be larger than zero, but got {new_multiplicity}."

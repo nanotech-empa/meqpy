@@ -46,7 +46,7 @@ def test_add_state_wrong_type():
     system = System()
     with pytest.raises(TypeError) as e_info:
         system.add_state("not a state")
-    assert str(e_info.value) == "state has to be State class, but got str"
+    assert str(e_info.value) == "state must be State, but got str"
 
 
 def test_get_index_missing_label():
@@ -142,7 +142,7 @@ def test_rescale_by_states_wrong_value_type():
     system = make_system()
     with pytest.raises(TypeError) as e_info:
         system.rescale_by_states("GS", "NIR", "two")
-    assert "value must be real number" in str(e_info.value)
+    assert "value must be Real, but got str" in str(e_info.value)
 
 
 def test_clebsch_gordan_factors():
