@@ -125,7 +125,6 @@ def test_matrix_by_states():
     assert np.array_equal(mat_idx, expected_idx)
 
 
-@pytest.mark.skip(reason="System.rescale_by_states() not yet merged to main.")
 def test_rescale_by_states():
     system = make_system()
 
@@ -139,7 +138,6 @@ def test_rescale_by_states():
     assert np.array_equal(mat_sym, expected)
 
 
-@pytest.mark.skip(reason="System.rescale_by_states() not yet merged to main.")
 def test_rescale_by_states_wrong_value_type():
     system = make_system()
     with pytest.raises(TypeError) as e_info:
