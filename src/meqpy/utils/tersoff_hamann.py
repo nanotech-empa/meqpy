@@ -1,7 +1,7 @@
 import numpy as np
 from numbers import Real
 
-from .types import validate_nonnegative_float
+from .types import validate_nonnegative_float, require_type
 
 import scipy.constants as const
 
@@ -28,12 +28,8 @@ def ldos_to_rate(tip_radius: float, kappa: np.ndarray) -> np.ndarray:
 
     validate_nonnegative_float(tip_radius, "tip_radius")
 
-    if isinstance(kappa, Real):
-        kappa = np.array([kappa])
-    elif not isinstance(kappa, np.ndarray):
-        raise TypeError(
-            f"kappa must be a real number or np.ndarray but got {type(kappa)}."
-        )
+    require_type(kappa, (Real, np.ndarray), "kappa")
+    kappa = np.asarray(kappa)
 
     return (
         0.1

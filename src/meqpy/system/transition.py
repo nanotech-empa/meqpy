@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from ..io.cube import Cube
-from ..utils.types import validate_nonnegative_int
+from ..utils.types import validate_nonnegative_int, require_type
 
 
 class Transition:
@@ -74,8 +74,7 @@ class Transition:
             Shift origin of coordinate system to molecule's center of mass, default is True.
         """
 
-        if not isinstance(cube, Cube):
-            raise TypeError(f"cube must be of type Cube, but got {type(cube)}")
+        require_type(cube, Cube, "cube")
 
         self.spacing = cube.spacing
 

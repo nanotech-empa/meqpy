@@ -3,7 +3,11 @@ from numbers import Real
 import numpy as np
 from .transition import Transition
 from ..io.cube import Cube
-from ..utils.types import validate_real_or_1darray, validate_nonnegative_int
+from ..utils.types import (
+    validate_real_or_1darray,
+    validate_nonnegative_int,
+    require_type,
+)
 from ase.units import Bohr
 
 
@@ -65,10 +69,7 @@ class Dyson(Transition):
             Shift origin of coordinate system to molecule's center of mass, default is True.
         """
 
-        if not isinstance(slice_height, Real):
-            raise TypeError(
-                f"slice_height must be of type float, but got {type(slice_height)}"
-            )
+        require_type(slice_height, Real, "slice_height")
 
         super().parse_cube_dimensions(cube=cube, center_mass=center_mass)
 
@@ -135,19 +136,13 @@ class Dyson(Transition):
         if isinstance(kappa, Real):
             kappa = np.array([kappa])
 
-        if not isinstance(kappa, np.ndarray):
-            raise TypeError(f"kappa must be Real or np.ndarray, but got {type(kappa)}")
+        require_type(kappa, np.ndarray, "kappa")
 
         if (kappa <= 0).any():
             raise ValueError("kappa must be positive.")
 
         if kappa.ndim == 0:
             kappa = np.array([kappa])
-
-        if not isinstance(pad, int):
-            raise TypeError(
-                f"pad must be of type int and non-negative, but got {type(pad)}"
-            )
 
         validate_nonnegative_int(pad, "pad")
 

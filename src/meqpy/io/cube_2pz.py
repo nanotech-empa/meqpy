@@ -2,7 +2,11 @@ import numpy as np
 from ase.atoms import Atoms
 from ase.units import Bohr
 from .cube import Cube
-from ..utils.types import validate_real_or_1darray, validate_nonnegative_float
+from ..utils.types import (
+    validate_real_or_1darray,
+    validate_nonnegative_float,
+    require_type,
+)
 from numbers import Real
 
 
@@ -74,8 +78,7 @@ class Cube_2pz(Cube):
             Step size of cube grid.
         """
 
-        if not isinstance(boundary, Real):
-            raise TypeError(f"Boundary must be real but got type {type(boundary)}")
+        require_type(boundary, Real, "boundary")
 
         self.boundary = boundary
 
@@ -103,7 +106,7 @@ class Cube_2pz(Cube):
         elements : np.ndarray
             List of elements of hopping sites, defaults to carbon.
         """
-        if type(elements) is type(None):
+        if elements is None:
             elements = np.zeros(positions.shape[0])
             elements.fill(6)
 
