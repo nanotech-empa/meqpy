@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from meqpy.system import Dyson, Molecule, State
+from meqpy.system import System, Dyson, Molecule, State
 
 
 # Dir file to store test data files, if needed in the future
@@ -21,8 +21,27 @@ def cube_path():
 
 
 @pytest.fixture
+def make_system():
+    """Return resolver to create 3-state system. If quartet = True: add state Q"""
+
+    def _resolve(quartet: bool = False, **kwargs):
+        states = [
+            State("GS", 0.0, 0, multiplicity=1),
+            State("PIR", 0.5, 1, multiplicity=2),
+            State("NIR", 0.3, -1, multiplicity=2),
+        ]
+        defaults = dict(hwhm=0.0, lineshape="dirac", workfunction=5.0, kappa_mode="10")
+        defaults.update(kwargs)
+        if quartet:
+            states.append(State("Q", 1.5, 1, multiplicity=4))
+        return System(states=states, **defaults)
+
+    return _resolve
+
+
+@pytest.fixture
 def make_molecule():
-    """Build a small Molecule with GS, PIR, NIR states (no Dyson orbitals attached)."""
+    """Return resolver to create Molecule, without dyson."""
 
     def _resolve(**kwargs):
         states = [
@@ -39,7 +58,7 @@ def make_molecule():
 
 @pytest.fixture
 def make_molecule_with_dyson(make_molecule, cube_path):
-    """Build a small Molecule with GS, PIR, NIR states, including dyson for GS -> PIR transition."""
+    """Return resolver to create Molecule, with dyson for GS -> PIR transition."""
 
     def _resolve(cube_name, **kwargs):
         molecule = make_molecule(**kwargs)

@@ -3,26 +3,6 @@ import pytest
 from meqpy.system import State, System
 
 
-def make_system(**kwargs):
-    """Build a small 3-state system: GS, PIR, NIR."""
-    states = [
-        State("GS", 0.0, 0, multiplicity=1),
-        State("PIR", 0.5, 1, multiplicity=2),
-        State("NIR", 0.3, -1, multiplicity=2),
-    ]
-    defaults = dict(hwhm=0.0, lineshape="dirac", workfunction=5.0, kappa_mode="10")
-    defaults.update(kwargs)
-    return System(states=states, **defaults)
-
-
-def make_system_with_high_spin_state(**kwargs):
-    """Like make_system, but with an added quartet state (M=4)."""
-
-    system = make_system(**kwargs)
-    system.add_state(State("Q", 1.5, 1, multiplicity=4))
-    return system
-
-
 def test_add_and_get_state():
     system = System()
     state = State("a", 1.0, 0)
@@ -49,7 +29,7 @@ def test_add_state_wrong_type():
     assert str(e_info.value) == "state must be State, but got str"
 
 
-def test_get_index_missing_label():
+def test_get_index_missing_label(make_system):
     system = make_system()
     with pytest.raises(ValueError) as e_info:
         system.get_index("missing")
@@ -62,21 +42,21 @@ def test_spin_selection_rule_wrong_type():
     assert str(e_info.value).startswith("spin_selection_rule must be bool")
 
 
-def test_energies_charges_multiplicities():
+def test_energies_charges_multiplicities(make_system):
     system = make_system()
     assert np.allclose(system.energies, [0.0, 0.5, 0.3])
     assert np.array_equal(system.charges, [0, 1, -1])
     assert np.array_equal(system.multiplicities, [1, 2, 2])
 
 
-def test_shape_zeros_ones():
+def test_shape_zeros_ones(make_system):
     system = make_system()
     assert system.shape == (3, 3)
     assert np.array_equal(system.zeros, np.zeros((3, 3)))
     assert np.array_equal(system.ones, np.ones((3, 3)))
 
 
-def test_dE_dQ_dM():
+def test_dE_dQ_dM(make_system):
     system = make_system()
 
     dE = np.array(
@@ -106,7 +86,7 @@ def test_dE_dQ_dM():
     assert np.array_equal(system.dM, dM)
 
 
-def test_matrix_by_states():
+def test_matrix_by_states(make_system):
     system = make_system()
 
     mat = system.matrix_by_states("GS", "PIR")
@@ -125,7 +105,7 @@ def test_matrix_by_states():
     assert np.array_equal(mat_idx, expected_idx)
 
 
-def test_rescale_by_states():
+def test_rescale_by_states(make_system):
     system = make_system()
 
     mat = system.rescale_by_states("GS", "PIR", 2.0)
@@ -138,14 +118,14 @@ def test_rescale_by_states():
     assert np.array_equal(mat_sym, expected)
 
 
-def test_rescale_by_states_wrong_value_type():
+def test_rescale_by_states_wrong_value_type(make_system):
     system = make_system()
     with pytest.raises(TypeError) as e_info:
         system.rescale_by_states("GS", "NIR", "two")
     assert "value must be Real, but got str" in str(e_info.value)
 
 
-def test_clebsch_gordan_factors():
+def test_clebsch_gordan_factors(make_system):
     system = make_system()
 
     cg = np.array(
@@ -158,8 +138,8 @@ def test_clebsch_gordan_factors():
     assert np.allclose(system.clebsch_gordan_factors, cg, atol=1e-6)
 
 
-def test_normalized_charging_transitions_with_spin_rule():
-    system = make_system_with_high_spin_state()
+def test_normalized_charging_transitions_with_spin_rule(make_system):
+    system = make_system(quartet=True)
 
     # only transitions with |dQ|==1 AND |dM|==1 survive;
     # Q -> GS (|dQ|=1, |dM|=3) is excluded here
@@ -170,8 +150,8 @@ def test_normalized_charging_transitions_with_spin_rule():
     assert np.allclose(w, expected, atol=1e-6)
 
 
-def test_normalized_charging_transitions_without_spin_rule():
-    system = make_system_with_high_spin_state(spin_selection_rule=False)
+def test_normalized_charging_transitions_without_spin_rule(make_system):
+    system = make_system(quartet=True, spin_selection_rule=False)
 
     # only |dQ|==1 is required now; Q -> GS is now allowed too
     w = system.normalized_charging_transitions(0.0)
@@ -182,7 +162,7 @@ def test_normalized_charging_transitions_without_spin_rule():
     assert np.allclose(w, expected, atol=1e-6)
 
 
-def test_kappa_modes():
+def test_kappa_modes(make_system):
     system = make_system(kappa_mode="10")
     assert np.allclose(system.kappa(0.0), np.log(10) / 2.0, atol=1e-9)
 
@@ -202,7 +182,7 @@ def test_kappa_modes():
     assert kappa_biased[1, 0] > kappa_full[1, 0]
 
 
-def test_coupling_strength_shape_and_positivity():
+def test_coupling_strength_shape_and_positivity(make_system):
     system = make_system()
     coupling = system.coupling_strength(z=5.0)
     assert coupling.shape == (3, 3)
@@ -213,7 +193,7 @@ def test_coupling_strength_shape_and_positivity():
     assert np.all(coupling_far < coupling)
 
 
-def test_charging_rates_shape():
+def test_charging_rates_shape(make_system):
     system = make_system()
     rates = system.charging_rates(z=5.0, bias=0.0)
     assert rates.shape == (3, 3)
