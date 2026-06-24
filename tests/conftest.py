@@ -1,6 +1,6 @@
 import pytest
 from pathlib import Path
-from meqpy.system import System, Dyson, Molecule, State
+from meqpy.system import System, Dyson, Molecule, State, Lattice, BandTransition
 
 
 # Dir file to store test data files, if needed in the future
@@ -65,5 +65,52 @@ def make_molecule_with_dyson(make_molecule, cube_path):
         dyson = Dyson(cube_path(cube_name))
         molecule.add_dyson("GS", "PIR", dyson)
         return molecule, dyson
+
+    return _resolve
+
+
+@pytest.fixture
+def make_bandtransition():
+    """Return resolver to create BandTransition."""
+
+    def _resolve(**kwargs):
+        band_defaults = dict(bandwidth=1.0, effective_mass=1.0, dx=0.01, hwhm=0.0)
+        band_defaults.update(kwargs)
+        band = BandTransition(**band_defaults)
+        return band
+
+    return _resolve
+
+
+@pytest.fixture
+def make_lattice():
+    """Return resolver to create 3-state Lattice, without band transitions."""
+
+    def _resolve(**kwargs):
+        states = [
+            State("GS", 0.0, 0, multiplicity=1),
+            State("VB", 0.5, 1, multiplicity=2),
+            State("CB", 0.3, -1, multiplicity=2),
+        ]
+        defaults = dict(hwhm=0.0, lineshape="dirac", workfunction=5.0, kappa_mode="10")
+        defaults.update(kwargs)
+        return Lattice(states=states, **defaults)
+
+    return _resolve
+
+
+@pytest.fixture
+def make_lattice_with_band(make_lattice):
+    """Return resolver to create Lattice, with a BandTransition for GS -> VB."""
+
+    def _resolve(band_kwargs=None, **kwargs):
+        lattice = make_lattice(**kwargs)
+        band_kwargs = band_kwargs or {}
+        band_defaults = dict(bandwidth=1.0, effective_mass=1.0, dx=0.01)
+        band_defaults.update(band_kwargs)
+        band = BandTransition(**band_defaults)
+        key = ("GS", "VB")
+        lattice.add_band_transition(*key, band)
+        return lattice, key
 
     return _resolve
