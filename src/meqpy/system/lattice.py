@@ -178,7 +178,7 @@ class Lattice(System):
         """Compute the charging rate for a single :class:`BandTransition`.
 
         The rate is obtained by:
-        1. Computing the ldos at tip position
+        1. Compute the ldos at tip position
         2. Compute tunneling rates by integrating over energy,
            assuming quantum of conductance G0 at z = 0.
         3. Returning tunneling rate at given bias by interpolation.
@@ -205,19 +205,21 @@ class Lattice(System):
         bias = validate_real_or_1darray(bias, "bias")
         nz, nv = len(z), len(bias)
         band = self.band_transition_dict[key]
+
+        # make sure bias is in ascending order
         bias_inc = np.flip(bias) if bias[0] > bias[-1] else bias
 
         # ----------------------------------------
         # 1. Compute the differential rates (LDOS)
         # ----------------------------------------
 
-        # kappa_mat can be of shape (1, M) or (nv, M)
+        # kappa_mat can be of shape (M,) or (nv, M)
         # depending on kappa_mode and shape of bias
         energy, kappa_mat = self.band_kappa(
             key, bias_inc, kappa_mode=kappa_mode, squeeze=False
         )
 
-        # ldos can be of shape (1, M), (nz, M) or (nz, nv, M)
+        # ldos can be of shape (nz, M) or (nz, nv, M)
         # depending on kappa_mode and shape of z and bias
         ldos = np.exp(-2 * np.multiply.outer(z, kappa_mat)) * band.dos
 
@@ -245,13 +247,15 @@ class Lattice(System):
             raw_rates = np.flip(raw_rates, axis=-1)
 
         # raw_rates: (..., M); depending on kappa_mode and shape of z
-        # it can be (1, M), (nz, M) or (nz, nv, M).
-        # in the end we want charging_rates: (nz, nv)
+        # it can be (nz, M) or (nz, nv, M).
+        # in the end we want band_charging_rates: (nz, nv)
         M = len(energy)
-        leading_shape = raw_rates.shape[:-1]  # e.g. () or (nz,) or (nz, nv)
+        leading_shape = raw_rates.shape[:-1]  # e.g. (nz,) or (nz, nv)
         n_rows = int(np.prod(leading_shape)) if leading_shape else 1
         rr_flat = raw_rates.reshape(n_rows, M)  # (n_rows, M)
+
         if n_rows == 1:
+            # make grid 2D for RectBivariateSpline using filler dimension
             rr_flat = np.tile(rr_flat[0], (2, 1))
             row_indices = np.arange(2)
         else:
@@ -260,25 +264,27 @@ class Lattice(System):
         interp = RectBivariateSpline(row_indices, energy, rr_flat, kx=1, ky=3)
 
         if n_rows == 1:
-            # raw_rates shape (M,): skip filler-dimension and evaluate for bias (nz,) times
-            charging_rates = interp(0, bias_inc, grid=True)[None, 0, :].repeat(
-                nz, axis=0
-            )
+            # raw_rates shape (1, M): skip filler-dimension and evaluate for bias (nz,) times
+            band_charging_rates = interp(0, bias_inc, grid=True)  # [None, 0, :].repeat(
+            #     nz, axis=0
+            # )
         elif raw_rates.ndim == 2:
             # raw_rates shape (nz, M): evaluate on full (nz × nv) grid
-            charging_rates = interp(row_indices, bias_inc, grid=True)  # (nz, nv)
+            band_charging_rates = interp(row_indices, bias_inc, grid=True)  # (nz, nv)
         else:
             # raw_rates shape (nz, nv, M): paired evaluation
             flat_bias = np.tile(bias_inc, nz) if raw_rates.ndim == 3 else bias
-            charging_rates = interp(row_indices, flat_bias, grid=False).reshape(nz, nv)
+            band_charging_rates = interp(row_indices, flat_bias, grid=False).reshape(
+                nz, nv
+            )
 
         if bias[0] > bias[-1]:
-            charging_rates = np.flip(charging_rates, axis=-1)
+            band_charging_rates = np.flip(band_charging_rates, axis=-1)
 
         if squeeze:
-            charging_rates = np.squeeze(charging_rates)
+            band_charging_rates = np.squeeze(band_charging_rates)
 
-        return charging_rates
+        return band_charging_rates
 
     def charging_rates(
         self,
@@ -311,9 +317,10 @@ class Lattice(System):
         bias = validate_real_or_1darray(bias, "bias")
         kappa_mode = self._resolve_kappa_mode(kappa_mode)
 
+        # get normal System charging rates, but with modified kappa method
         charging_rates = super().charging_rates(z, bias, kappa_mode, squeeze=False)
 
-        # self.update_band_transitions()
+        # overwrite registered charging rates with band_charging_rates
         for key in self.band_transition_dict.keys():
             i, f = self.get_index(key[0]), self.get_index(key[1])
             band_rate = self.get_band_charging_rate(
@@ -332,7 +339,7 @@ class Lattice(System):
     # ------------------------------------------------------------------
 
     @property
-    def kpar_offset(self) -> np.ndarray:
+    def kpar_offsets(self) -> np.ndarray:
         """In-plane momentum matrix ``k_∥`` for all transitions.
 
         Entries are zero for non-band transitions, and ``band.kpar_offset``
@@ -377,4 +384,4 @@ class Lattice(System):
             Effective decay constant matrix, see :meth:`System.kappa`.
         """
         kappa_mat = super().kappa(bias, kappa_mode, squeeze)
-        return np.sqrt(kappa_mat**2 + self.kpar_offset**2)
+        return np.sqrt(kappa_mat**2 + self.kpar_offsets**2)
