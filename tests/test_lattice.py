@@ -17,7 +17,7 @@ def test_add_band_transition_wrong_type(make_lattice):
     lattice = make_lattice()
     with pytest.raises(TypeError) as e_info:
         lattice.add_band_transition("GS", "VB", "not a band")
-    assert "band must be type BandTransition" in str(e_info.value)
+    assert "band must be BandTransition" in str(e_info.value)
 
 
 def test_add_band_transition_invalid_charging_pair(make_lattice, make_bandtransition):
@@ -38,7 +38,7 @@ def test_band_transition_dict_setter_wrong_type(make_lattice):
     lattice = make_lattice()
     with pytest.raises(TypeError) as e_info:
         lattice.band_transition_dict = "not a dict"
-    assert "bands must be a dict" in str(e_info.value)
+    assert "bands must be dict" in str(e_info.value)
 
 
 def test_band_energy(make_lattice_with_band):

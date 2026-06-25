@@ -1,7 +1,7 @@
 import numpy as np
 from numbers import Real
 
-from ..utils import validate_real_or_1darray, validate_nonnegative_float
+from ..utils import validate_real_or_1darray, validate_nonnegative_float, require_type
 from ..utils.constants import ev_to_k2
 
 
@@ -19,7 +19,7 @@ class BandTransition:
         Defaults to ``0.0``.
     effective_mass : float, optional
         Effective mass of the band in units of the electron mass.
-        Defaults to ``0.0``.
+        Defaults to ``1.0``.
     bandwidth : float, optional
         Full bandwidth of the band in eV. Defaults to ``1.0``.
     hwhm : float, optional
@@ -37,7 +37,7 @@ class BandTransition:
     def __init__(
         self,
         kpar_offset: float = 0.0,
-        effective_mass: float = 0.0,
+        effective_mass: float = 1.0,
         bandwidth: float = 1.0,
         hwhm: float = 0,
         dx: float = 1e-3,
@@ -105,8 +105,7 @@ class BandTransition:
 
     @dx.setter
     def dx(self, value: float):
-        if not isinstance(value, Real):
-            raise TypeError(f"dx must be real, but got {type(value).__name__}")
+        require_type(value, Real, "dx")
         if value <= 0:
             raise ValueError(f"dx must be positive, but got {value}.")
         self._dx = value

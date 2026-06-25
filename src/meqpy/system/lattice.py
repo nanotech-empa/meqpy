@@ -4,7 +4,7 @@ from scipy.ndimage import gaussian_filter1d
 
 from .system import System
 from .band_transition import BandTransition
-from ..utils import validate_real_or_1darray, KappaMode, decay_constant
+from ..utils import validate_real_or_1darray, KappaMode, decay_constant, require_type
 
 from ..utils.constants import G0  # in 1/Vs
 
@@ -51,11 +51,7 @@ class Lattice(System):
             If the states ``a`` and ``b`` do not satisfy the charging
             (and spin) selection rules.
         """
-        if not isinstance(band, BandTransition):
-            raise TypeError(
-                f"band must be type BandTransition, but got type {type(band)}"
-            )
-
+        require_type(band, BandTransition, "band")
         self._valid_charging_pair(a, b)
 
         key = self._state_tuple(a, b, sorted=False)
@@ -90,8 +86,7 @@ class Lattice(System):
         TypeError
             If ``bands`` is not a :class:`dict`.
         """
-        if not isinstance(bands, dict):
-            raise TypeError(f"bands must be a dict, but got {type(bands)}")
+        require_type(bands, dict, "bands")
         for (a, b), band in bands.items():
             self.add_band_transition(a, b, band)
 
