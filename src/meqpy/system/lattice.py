@@ -6,16 +6,7 @@ from .system import System
 from .band_transition import BandTransition
 from ..utils import validate_real_or_1darray, KappaMode, decay_constant
 
-import scipy.constants as const
-
-ELEMENTARY_CHARGE = const.elementary_charge  # C
-ELECTRON_MASS = const.electron_mass  # kg
-HBAR = const.hbar  # J·s
-
-EV_TO_K = 2 * ELECTRON_MASS / HBAR**2 * ELEMENTARY_CHARGE * 1e-20  # 1/V/Ang**2
-G0 = ELEMENTARY_CHARGE / (
-    2 * np.pi * HBAR
-)  # Conductance quantum for each spin channel in 1/s
+from ..utils.constants import G0  # in 1/Vs
 
 
 class Lattice(System):

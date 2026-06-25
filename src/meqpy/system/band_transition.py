@@ -2,14 +2,7 @@ import numpy as np
 from numbers import Real
 
 from ..utils import validate_real_or_1darray, validate_nonnegative_float
-
-import scipy.constants as const
-
-ELEMENTARY_CHARGE = const.elementary_charge  # C
-ELECTRON_MASS = const.electron_mass  # kg
-HBAR = const.hbar  # J·s
-
-EV_TO_K = 2 * ELECTRON_MASS / HBAR**2 * ELEMENTARY_CHARGE * 1e-20  # 1/V/Ang**2
+from ..utils.constants import ev_to_k2
 
 
 class BandTransition:
@@ -152,7 +145,7 @@ class BandTransition:
             In-plane momentum array.
         """
         eps = self.energy
-        k = np.sqrt(np.abs(EV_TO_K * self.effective_mass * eps)) * (eps >= 0)
+        k = np.sqrt(np.abs(ev_to_k2 * self.effective_mass * eps)) * (eps >= 0)
         sign = np.sign(self.kpar_offset)
         return k if sign == 0 else self.kpar_offset - k * sign
 

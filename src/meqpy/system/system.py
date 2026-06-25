@@ -7,16 +7,10 @@ from ..utils import (
     require_type,
 )
 from ..utils import decay_constant, lineshape_integral
+from ..utils.constants import G0  # in 1/Vs
 from typing import Optional, Sequence
 import numpy as np
-import scipy.constants as const
 from numbers import Real
-
-ELEMENTARY_CHARGE = const.elementary_charge  # C
-HBAR = const.hbar  # J·s
-G0 = ELEMENTARY_CHARGE / (
-    2 * np.pi * HBAR
-)  # Conductance quantum for each spin channel in 1/s
 
 
 class System:
