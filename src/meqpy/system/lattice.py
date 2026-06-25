@@ -265,9 +265,7 @@ class Lattice(System):
 
         if n_rows == 1:
             # raw_rates shape (1, M): skip filler-dimension and evaluate for bias (nz,) times
-            band_charging_rates = interp(0, bias_inc, grid=True)  # [None, 0, :].repeat(
-            #     nz, axis=0
-            # )
+            band_charging_rates = interp(0, bias_inc, grid=True)
         elif raw_rates.ndim == 2:
             # raw_rates shape (nz, M): evaluate on full (nz × nv) grid
             band_charging_rates = interp(row_indices, bias_inc, grid=True)  # (nz, nv)
