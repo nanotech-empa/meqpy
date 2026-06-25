@@ -134,14 +134,14 @@ def test_charging_rates_multi_z_bias_shape(make_lattice_with_band):
 
 def test_kpar_zero_without_band_transitions(make_lattice):
     lattice = make_lattice()
-    assert np.array_equal(lattice.kpar_offset, np.zeros((3, 3)))
+    assert np.array_equal(lattice.kpar_offsets, np.zeros((3, 3)))
 
 
 def test_kpar_symmetric_and_matches_band_offset(make_lattice_with_band):
     lattice, key = make_lattice_with_band({"kpar_offset": 0.3})
 
     i, f = lattice.get_index(key[0]), lattice.get_index(key[1])
-    kpar = lattice.kpar_offset
+    kpar = lattice.kpar_offsets
     assert kpar[i, f] == 0.3
     assert kpar[f, i] == 0.3
     assert np.array_equal(kpar, kpar.T)
