@@ -148,13 +148,13 @@ class Molecule(System):
     @property
     def dyson_dict(self) -> dict[tuple[str, str], Dyson]:
         """Dictionary containing Dyson objects for charging transitions."""
-        # should we use copy here? otherwise it is easy to accidentally change it
-        return self._dyson_dict.copy()
+        return self._dyson_dict
 
     @dyson_dict.setter
     def dyson_dict(self, dysons: dict[tuple[str, str], Dyson]):
         require_type(dysons, dict, "dysons")
 
+        self._dyson_dict = {}
         for key, dyson in dysons.items():
             require_type(key, tuple, "key")
 
