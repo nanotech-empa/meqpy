@@ -9,8 +9,8 @@ from ..utils import validate_real_or_1darray, KappaMode, decay_constant, require
 from ..utils.constants import G0  # in 1/Vs
 
 
-class Lattice(System):
-    """System for periodic samples with band structures.
+class BandSystem(System):
+    """System with band like transitions.
 
     Extends :class:`System` with support for band-resolved charging transitions,
     where tunneling rates are computed by integrating over a continuous band of
@@ -23,7 +23,7 @@ class Lattice(System):
     """
 
     def __init__(self, **kwargs):
-        """Initialize Lattice."""
+        """Initialize BandSystem."""
         super().__init__(**kwargs)
         self._band_transition_dict = {}
 
@@ -86,7 +86,10 @@ class Lattice(System):
         TypeError
             If ``bands`` is not a :class:`dict`.
         """
+
         require_type(bands, dict, "bands")
+
+        self._band_transition_dict = {}
         for (a, b), band in bands.items():
             self.add_band_transition(a, b, band)
 

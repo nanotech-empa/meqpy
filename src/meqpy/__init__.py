@@ -11,7 +11,7 @@ from .system.transition import Transition
 from .system.dyson import Dyson
 from .system.molecule import Molecule
 from .system.band_transition import BandTransition
-from .system.lattice import Lattice
+from .system.band_system import BandSystem
 from .master_equation.equilibrium import (
     solve_equilibrium,
     solve_equilibrium_nd,
@@ -27,7 +27,7 @@ __all__ = [
     "Dyson",
     "Molecule",
     "BandTransition",
-    "Lattice",
+    "BandSystem",
     "solve_equilibrium",
     "solve_equilibrium_nd",
     "fill_diagonal",
