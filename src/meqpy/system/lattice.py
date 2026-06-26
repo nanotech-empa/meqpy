@@ -54,7 +54,7 @@ class Lattice(System):
         require_type(band, BandTransition, "band")
         self._valid_charging_pair(a, b)
 
-        key = self._state_tuple(a, b, sorted=False)
+        key = self._state_tuple(a, b, sort=False)
         self._band_transition_dict[key] = band
 
     @property

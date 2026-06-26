@@ -622,7 +622,7 @@ class System:
     # ------------------------------------------------------------------
 
     def _state_tuple(
-        self, a: str | int, b: str | int, sorted: bool = True
+        self, a: str | int, b: str | int, sort: bool = True
     ) -> tuple[str, str]:
         """Return a ``(label_a, label_b)`` key, validating that both states exist.
 
@@ -653,10 +653,7 @@ class System:
         a = self.states[self._resolve_index(a, "a")].label
         b = self.states[self._resolve_index(b, "b")].label
 
-        if sorted:
-            return (min(a, b), max(a, b))
-        else:
-            return (a, b)
+        return tuple(sorted((a, b))) if sort else (a, b)
 
     def _valid_charging_pair(
         self, a: str | int, b: str | int, no_error: bool = False
