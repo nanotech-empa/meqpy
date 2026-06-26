@@ -1,7 +1,7 @@
 from ase.io.cube import read_cube
 import numpy as np
 import os
-from ..utils.constants import bohr
+from ..utils.constants import BOHR
 
 
 class Cube:
@@ -72,7 +72,7 @@ class Cube:
     def magsqr(self):
         """Returns the magnitude squared of the cube data."""
         spacings = np.linalg.norm(self.spacing, axis=1)
-        voxel_size = np.prod(spacings) / bohr**3
+        voxel_size = np.prod(spacings) / BOHR**3
         return np.sum(self.data**2) * voxel_size
 
     def get_slice_data(self, distance: float, axis: int = 2) -> np.ndarray:

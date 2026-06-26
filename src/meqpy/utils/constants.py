@@ -1,15 +1,15 @@
 import scipy.constants as const
 
-elementary_charge = const.elementary_charge  # C
-electron_mass = const.electron_mass  # kg
+ELEMENTARY_CHARGE = const.elementary_charge  # C
+ELECTRON_MASS = const.electron_mass  # kg
 
-bohr = const.physical_constants["Bohr radius"][0] * 1e10  # Å
+BOHR = const.physical_constants["Bohr radius"][0] * 1e10  # Å
 
-planck = const.Planck  # J·s
-planck_ev = const.Planck / elementary_charge  # eV·s
-hbar = const.hbar  # J·s
-hbar_ev = const.hbar / elementary_charge  # eV·s
+PLANCK = const.Planck  # J·s
+PLANCK_EV = const.Planck / ELEMENTARY_CHARGE  # eV·s
+HBAR = const.hbar  # J·s
+HBAR_EV = const.hbar / ELEMENTARY_CHARGE  # eV·s
 
-ev_to_k2 = 2 * electron_mass / hbar**2 * elementary_charge * 1e-20  # 1/V/Å²
+EV_TO_K2 = 2 * ELECTRON_MASS * ELEMENTARY_CHARGE / HBAR**2 * 1e-20  # 1/V/Å²
 
-G0 = elementary_charge / planck  # Conductance quantum for each spin channel in 1/V/s
+G0 = ELEMENTARY_CHARGE / PLANCK  # Conductance quantum for each spin channel in 1/V/s

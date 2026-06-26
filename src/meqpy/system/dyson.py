@@ -8,7 +8,7 @@ from ..utils.types import (
     validate_nonnegative_int,
     require_type,
 )
-from ..utils.constants import bohr
+from ..utils.constants import BOHR
 
 
 class Dyson(Transition):
@@ -85,7 +85,7 @@ class Dyson(Transition):
         else:
             distance = slice_height - cube.origin[2]
 
-        self.data = cube.get_slice_data(distance, axis=2) / bohr**1.5
+        self.data = cube.get_slice_data(distance, axis=2) / BOHR**1.5
 
     @property
     def shape(self) -> tuple[int, int]:

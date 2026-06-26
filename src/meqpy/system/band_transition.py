@@ -2,7 +2,7 @@ import numpy as np
 from numbers import Real
 
 from ..utils import validate_real_or_1darray, validate_nonnegative_float, require_type
-from ..utils.constants import ev_to_k2
+from ..utils.constants import EV_TO_K2
 
 
 class BandTransition:
@@ -144,7 +144,7 @@ class BandTransition:
             In-plane momentum array.
         """
         eps = self.energy
-        k = np.sqrt(np.abs(ev_to_k2 * self.effective_mass * eps)) * (eps >= 0)
+        k = np.sqrt(np.abs(EV_TO_K2 * self.effective_mass * eps)) * (eps >= 0)
         sign = np.sign(self.kpar_offset)
         return k if sign == 0 else self.kpar_offset - k * sign
 
