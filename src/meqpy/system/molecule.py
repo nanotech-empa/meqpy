@@ -148,7 +148,7 @@ class Molecule(System):
     @property
     def dyson_dict(self) -> dict[tuple[str, str], Dyson]:
         """Dictionary containing Dyson objects for charging transitions."""
-        return self._dyson_dict
+        return dict(self._dyson_dict)
 
     @dyson_dict.setter
     def dyson_dict(self, dysons: dict[tuple[str, str], Dyson]):
