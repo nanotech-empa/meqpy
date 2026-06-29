@@ -35,6 +35,7 @@ def test_add_dyson_invalid_charging_pair(make_molecule, cube_path):
 def test_dyson_dict_setter(make_molecule, cube_path):
     molecule = make_molecule()
     dyson = Dyson(cube_path("cartesian"))
+    molecule.add_dyson("GS", "NIR", dyson)
 
     molecule.dyson_dict = {("GS", "PIR"): dyson}
     assert molecule.dyson_dict == {("GS", "PIR"): dyson}
