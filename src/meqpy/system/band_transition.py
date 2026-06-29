@@ -75,7 +75,7 @@ class BandTransition:
 
     @effective_mass.setter
     def effective_mass(self, value: float):
-        require_type(value, Real)
+        require_type(value, Real, "effective_mass")
         self._effective_mass = value
 
     @property
