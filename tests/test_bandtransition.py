@@ -3,11 +3,6 @@ import pytest
 from meqpy.system import BandTransition
 
 
-def test_effective_mass_negative_raises():
-    with pytest.raises(ValueError):
-        BandTransition(effective_mass=-1.0)
-
-
 def test_bandwidth_negative_raises():
     with pytest.raises(ValueError):
         BandTransition(bandwidth=-1.0)
@@ -24,13 +19,19 @@ def test_dx_wrong_type():
         BandTransition(dx="0.1")
 
 
+def test_e_offset_negative_raises():
+    with pytest.raises(ValueError):
+        BandTransition(e_offset=-1.0)
+
+
 def test_dos_is_unit_step_within_band(make_bandtransition):
     band = make_bandtransition()
     dos = band.dos
     energy = band.energy
 
-    assert np.all(dos[(energy >= 0) & (energy <= band.bandwidth)] == 1.0)
+    assert np.all(dos[(energy > 0) & (energy < band.bandwidth)] == 1.0)
     assert np.all(dos[(energy < 0) | (energy > band.bandwidth)] == 0.0)
+    assert np.all(dos[(energy == 0) | (energy == band.bandwidth)] == 0.5)
 
 
 def test_kpar_zero_below_band_bottom(make_bandtransition):
