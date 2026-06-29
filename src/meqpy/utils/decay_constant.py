@@ -1,18 +1,12 @@
 from numbers import Real
 import numpy as np
-from scipy import constants as const
 from .types import (
     ValidatedEnum,
     validate_real_or_1darray,
     validate_nonnegative_float,
     require_type,
 )
-
-
-# Fundamental constants
-ELECTRON_MASS = const.electron_mass  # kg
-ELEMENTARY_CHARGE = const.elementary_charge  # C
-HBAR = const.hbar  # J·s
+from ..utils.constants import EV_TO_K2
 
 
 class KappaMode(str, ValidatedEnum):
@@ -85,9 +79,7 @@ def kappa_const_full(barrier_height):
     if not (barrier_height > 0).all():
         raise ValueError("barrier_height must be positive.")
 
-    kappa = np.sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE / HBAR**2 * barrier_height)
-    kappa *= 1e-10
-    return kappa
+    return np.sqrt(EV_TO_K2 * barrier_height)
 
 
 def kappa10(barrier_height):

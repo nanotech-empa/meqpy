@@ -85,65 +85,9 @@ class Molecule(System):
         """
         require_type(dyson, Dyson, "dyson")
 
-        if not self._valid_charging_pair(a, b):
-            raise ValueError(
-                f"States must differ in charge {'and multiplicity ' * self.spin_selection_rule}by 1."
-            )
-
+        self._valid_charging_pair(a, b)
         key = self._state_tuple(a, b)
         self._dyson_dict[key] = dyson
-
-    def _state_tuple(self, a: str | int, b: str | int) -> tuple[str, str]:
-        """Create normed tuple for two states, to be used as key in `Molecule.dysons`.
-
-        Parameters
-        ----------
-        a : str | int
-            Label or index of first state.
-        b : str | int
-            Label or index of second state.
-
-        Returns
-        -------
-        tuple[str,str]
-            Alphabetically sorted tuple containing label of two states.
-        """
-        if isinstance(a, (int, np.int_)):
-            a = self.states[int(a)].label
-        else:
-            self.get_index(a)  # check if a is existing label
-
-        if isinstance(b, (int, np.int_)):
-            b = self.states[int(b)].label
-        else:
-            self.get_index(b)  # check if b is existing label
-
-        return (min(a, b), max(a, b))
-
-    def _valid_charging_pair(self, a: str | int, b: str | int) -> bool:
-        """Check if two given states differ in charge by exactly 1.
-        If spin_selection_rule is True, check if ΔM=±1 as well.
-
-        Parameters
-        ----------
-        a : str | int
-            Label or index of first state.
-        b : str | int
-            Label or index of second state.
-
-        Returns
-        -------
-        bool
-            True if the two states differ in charge (and multiplicity) by exactly 1.
-        """
-        dQ = self.get_state(a).charge - self.get_state(b).charge
-        is_valid = abs(dQ) == 1
-
-        if self.spin_selection_rule:
-            dM = self.get_state(a).multiplicity - self.get_state(b).multiplicity
-            is_valid *= abs(dM) == 1
-
-        return is_valid
 
     @property
     def dyson_dict(self) -> dict[tuple[str, str], Dyson]:
@@ -208,7 +152,7 @@ class Molecule(System):
         possible_keys = {
             self._state_tuple(f, i)
             for f, i in np.ndindex(self.ones.shape)
-            if self._valid_charging_pair(f, i)
+            if self._valid_charging_pair(f, i, no_error=True)
         }
 
         # remove all keys found in self.dyson_dict and return missing rest
