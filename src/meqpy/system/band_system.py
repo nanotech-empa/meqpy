@@ -31,6 +31,38 @@ class BandSystem(System):
     # Band transition dict
     # ------------------------------------------------------------------
 
+    def _add_band_transition_to_dict(
+        self, a: str | int, b: str | int, band: BandTransition, register: dict
+    ):
+        """Register a :class:`BandTransition` for the charging transition a → b into given dictionary.
+
+        Parameters
+        ----------
+        a : str | int
+            Label or index of the initial state.
+        b : str | int
+            Label or index of the final state.
+        band : BandTransition
+            Band transition object.
+        register : dict
+            Dictionary to add the BandTransition object
+        Raises
+        ------
+        TypeError
+            If ``band`` is not an instance of :class:`BandTransition`
+            if ``register`` is not an instance of :class:`dict`
+        ValueError
+            If the states ``a`` and ``b`` do not satisfy the charging
+            (and spin) selection rules.
+        """
+        require_type(band, BandTransition, "band")
+        require_type(register, dict, "register")
+
+        self._valid_charging_pair(a, b)
+
+        key = self._state_tuple(a, b, sort=False)
+        register[key] = band
+
     def add_band_transition(self, a: str | int, b: str | int, band: BandTransition):
         """Register a :class:`BandTransition` for the charging transition a → b.
 
@@ -51,11 +83,8 @@ class BandSystem(System):
             If the states ``a`` and ``b`` do not satisfy the charging
             (and spin) selection rules.
         """
-        require_type(band, BandTransition, "band")
-        self._valid_charging_pair(a, b)
 
-        key = self._state_tuple(a, b, sort=False)
-        self._band_transition_dict[key] = band
+        self._add_band_transition_to_dict(a, b, band, self._band_transition_dict)
 
     @property
     def band_transition_dict(self) -> dict[tuple[str, str], BandTransition]:
