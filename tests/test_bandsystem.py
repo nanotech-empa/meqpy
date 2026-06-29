@@ -32,6 +32,7 @@ def test_add_band_transition_invalid_charging_pair(
 def test_band_transition_dict_setter(make_bandsystem, make_bandtransition):
     bandsystem = make_bandsystem()
     band = make_bandtransition()
+    bandsystem.add_band_transition("GS", "CB", band)
     bandsystem.band_transition_dict = {("GS", "VB"): band}
     assert bandsystem.band_transition_dict == {("GS", "VB"): band}
 

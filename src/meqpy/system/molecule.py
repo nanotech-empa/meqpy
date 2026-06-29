@@ -64,6 +64,40 @@ class Molecule(System):
         if validate_nonnegative_int(padding, "padding"):
             self._padding = padding
 
+    def _add_dyson_to_dict(
+        self, a: str | int, b: str | int, dyson: Dyson, register: dict
+    ):
+        """Add dyson transition to given dictionary.
+
+        Parameters
+        ----------
+        a : str | int
+            Label or index of first state.
+        b : str | int
+            Label or index of second state.
+        dyson : Dyson
+            Dyson object for this transition.
+        register : dict
+            Dictionary to add the Dyson object
+
+        Raises
+        ------
+        TypeError
+            If dyson is not type Dyson or register is not dict.
+        ValueError
+            If given states are not valid for charging transition.
+        """
+        require_type(dyson, Dyson, "dyson")
+        require_type(register, dict, "register")
+
+        if not self._valid_charging_pair(a, b):
+            raise ValueError(
+                f"States must differ in charge {'and multiplicity ' * self.spin_selection_rule}by 1."
+            )
+
+        key = self._state_tuple(a, b)
+        register[key] = dyson
+
     def add_dyson(self, a: str | int, b: str | int, dyson: Dyson):
         """Add dyson transition to molecule.
 
@@ -83,22 +117,19 @@ class Molecule(System):
         ValueError
             If given states are not valid for charging transition.
         """
-        require_type(dyson, Dyson, "dyson")
 
-        self._valid_charging_pair(a, b)
-        key = self._state_tuple(a, b)
-        self._dyson_dict[key] = dyson
+        self._add_dyson_to_dict(a, b, dyson, self._dyson_dict)
 
     @property
     def dyson_dict(self) -> dict[tuple[str, str], Dyson]:
         """Dictionary containing Dyson objects for charging transitions."""
-        # should we use copy here? otherwise it is easy to accidentally change it
-        return self._dyson_dict.copy()
+        return dict(self._dyson_dict)
 
     @dyson_dict.setter
     def dyson_dict(self, dysons: dict[tuple[str, str], Dyson]):
         require_type(dysons, dict, "dysons")
 
+        new_dict = {}
         for key, dyson in dysons.items():
             require_type(key, tuple, "key")
 
@@ -109,7 +140,9 @@ class Molecule(System):
 
             a, b = key
 
-            self.add_dyson(a, b, dyson)
+            self._add_dyson_to_dict(a, b, dyson, new_dict)
+
+        self._dyson_dict = new_dict
 
     @property
     def dyson_shape(self) -> tuple[int, int]:
