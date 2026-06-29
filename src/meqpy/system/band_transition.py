@@ -39,6 +39,7 @@ class BandTransition:
         kpar_offset: float = 0.0,
         effective_mass: float = 1.0,
         bandwidth: float = 1.0,
+        e_offset: float = 0.0,
         hwhm: float = 0,
         dx: float = 1e-3,
     ):
@@ -46,6 +47,7 @@ class BandTransition:
         self.kpar_offset = kpar_offset
         self.effective_mass = effective_mass
         self.bandwidth = bandwidth
+        self.e_offset = e_offset
         self.hwhm = hwhm
         self.dx = dx
 
@@ -73,7 +75,7 @@ class BandTransition:
 
     @effective_mass.setter
     def effective_mass(self, value: float):
-        validate_nonnegative_float(value, "effective_mass")
+        require_type(value, Real, "effective_mass")
         self._effective_mass = value
 
     @property
@@ -86,6 +88,16 @@ class BandTransition:
         validate_nonnegative_float(value, "bandwidth")
         self._bandwidth = value
         self._energy_cache = None  # invalidate cache
+
+    @property
+    def e_offset(self) -> float:
+        """Energy offset of the disperion in eV."""
+        return self._e_offset
+
+    @e_offset.setter
+    def e_offset(self, value: float):
+        validate_nonnegative_float(value, "e_offset")
+        self._e_offset = value
 
     @property
     def hwhm(self) -> float:
@@ -144,7 +156,12 @@ class BandTransition:
             In-plane momentum array.
         """
         eps = self.energy
-        k = np.sqrt(np.abs(EV_TO_K2 * self.effective_mass * eps)) * (eps >= 0)
+        k = np.heaviside(eps, 1.0) * np.heaviside(self.bandwidth - eps, 1.0)
+        if self.effective_mass < 0:
+            eps = self.bandwidth - eps
+        k *= np.sqrt(
+            np.abs(EV_TO_K2 * abs(self.effective_mass) * (eps + self.e_offset))
+        )
         sign = np.sign(self.kpar_offset)
         return k if sign == 0 else self.kpar_offset - k * sign
 
@@ -157,5 +174,8 @@ class BandTransition:
         dos : (E,) np.ndarray
             DoS mask array.
         """
+
         eps = self.energy
-        return ((eps >= 0) & (eps <= self.bandwidth)).astype(float)
+        eps[np.isclose(eps, 0, atol=1e-12)] = 0.0
+        eps[np.isclose(eps, self.bandwidth, atol=1e-12)] = self.bandwidth
+        return np.heaviside(eps, 0.5) * np.heaviside(self.bandwidth - eps, 0.5)
