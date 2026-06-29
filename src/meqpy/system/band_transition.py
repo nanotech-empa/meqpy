@@ -156,7 +156,7 @@ class BandTransition:
             In-plane momentum array.
         """
         eps = self.energy
-        k = (eps >= 0).astype(float)
+        k = np.heaviside(eps, 1.0) * np.heaviside(self.bandwidth - eps, 1.0)
         if self.effective_mass < 0:
             eps = self.bandwidth - eps
         k *= np.sqrt(
