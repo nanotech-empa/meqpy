@@ -167,7 +167,7 @@ class BandTransition:
 
     @property
     def dos(self) -> np.ndarray:
-        """Uniform DoS mask: 1 inside the band, 0 outside.
+        """Density of states: self.effective_mass inside the band, 0 outside.
 
         Returns
         -------
@@ -178,4 +178,7 @@ class BandTransition:
         eps = self.energy
         eps[np.isclose(eps, 0, atol=1e-12)] = 0.0
         eps[np.isclose(eps, self.bandwidth, atol=1e-12)] = self.bandwidth
-        return np.heaviside(eps, 0.5) * np.heaviside(self.bandwidth - eps, 0.5)
+        dos = np.heaviside(eps, 0.5) * np.heaviside(self.bandwidth - eps, 0.5)
+        if self.effective_mass != 0:
+            dos *= abs(self.effective_mass)
+        return dos
