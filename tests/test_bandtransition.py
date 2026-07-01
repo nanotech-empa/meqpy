@@ -25,13 +25,13 @@ def test_e_offset_negative_raises():
 
 
 def test_dos_is_unit_step_within_band(make_bandtransition):
-    band = make_bandtransition()
+    band = make_bandtransition(effective_mass=2.0)
     dos = band.dos
     energy = band.energy
 
-    assert np.all(dos[(energy > 0) & (energy < band.bandwidth)] == 1.0)
+    assert np.all(dos[(energy > 0) & (energy < band.bandwidth)] == 2.0)
     assert np.all(dos[(energy < 0) | (energy > band.bandwidth)] == 0.0)
-    assert np.all(dos[(energy == 0) | (energy == band.bandwidth)] == 0.5)
+    assert np.all(dos[(energy == 0) | (energy == band.bandwidth)] == 1.0)
 
 
 def test_kpar_zero_below_band_bottom(make_bandtransition):
