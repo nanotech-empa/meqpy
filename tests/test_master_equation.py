@@ -8,23 +8,6 @@ from meqpy.master_equation.equilibrium import (
 
 
 # ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
-
-def make_rate_matrix(n, rates):
-    """Build an (n, n) off-diagonal rate matrix from {(from_idx, to_idx): rate}.
-
-    The diagonal is intentionally left at zero so that fill_diagonal can be
-    tested independently, and so that the solvers can fill it themselves.
-    """
-    W = np.zeros((n, n))
-    for (i, j), rate in rates.items():
-        W[j, i] = rate  # W[final, initial] = rate
-    return W
-
-
-# ---------------------------------------------------------------------------
 # fill_diagonal
 # ---------------------------------------------------------------------------
 
