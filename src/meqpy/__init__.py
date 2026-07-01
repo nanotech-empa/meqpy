@@ -14,6 +14,7 @@ from .system.band_transition import BandTransition
 from .system.band_system import BandSystem
 from .master_equation.equilibrium import (
     solve_equilibrium,
+    solve_equilibrium_nd,
     fill_diagonal,
 )
 from .master_equation.measurement import measurement
@@ -28,6 +29,7 @@ __all__ = [
     "BandTransition",
     "BandSystem",
     "solve_equilibrium",
+    "solve_equilibrium_nd",
     "fill_diagonal",
     "measurement",
     "Cube",

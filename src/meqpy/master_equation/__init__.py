@@ -1,4 +1,4 @@
-from .equilibrium import solve_equilibrium
+from .equilibrium import solve_equilibrium, solve_equilibrium_nd
 from .measurement import measurement
 
-__all__ = ["solve_equilibrium", "measurement"]
+__all__ = ["solve_equilibrium", "solve_equilibrium_nd", "measurement"]
