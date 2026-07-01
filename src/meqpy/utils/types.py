@@ -81,11 +81,8 @@ def validate_real_or_1darray(value, name: str) -> np.ndarray:
     return value
 
 
-def validate_stack_of_square_matrices(
-    array: np.ndarray, name: str, dims: int = None
-) -> bool:
+def validate_stack_of_square_matrices(array: np.ndarray, name: str) -> bool:
     """Raise error if array is not np.ndarray with last two dimensions of equal length.
-    Optional: check if array is of dimension dims.
 
     Parameters
     ----------
@@ -93,35 +90,63 @@ def validate_stack_of_square_matrices(
         Input array to check
     name : str
         Name of parameter to be used in error messages.
-    dims : int, optional
-        Check for given number of dimensions, by default None
 
     Returns
     -------
     bool
-        True if array is np.ndarray with last two dimensions of equal length and of dimension dims if given.
+        True if array is np.ndarray with last two dimensions of equal length.
 
 
     Raises
     ------
     TypeError
         If array is not np.ndarray
-    ValueError
-        If last two dimensions do not have same length or array does not have specified number of dimensions.
     """
 
     if not isinstance(array, np.ndarray):
         raise TypeError(f"{name} must be np.ndarray, but got {type(array).__name__}.")
 
-    elif type(dims) is not type(None) and array.ndim != dims:
-        raise ValueError(
-            f"{name} must be a {dims}D np.ndarray, but got array with shape {array.shape}."
-        )
-
     elif array.shape[-2] != array.shape[-1]:
         raise ValueError(
             f"Last two dimensions of {name} must be a square matrix, but got array with shape {array.shape}."
         )
+
+    return True
+
+
+def validate_non_negative_offdiagonal(array: np.ndarray, name: str) -> bool:
+    """Raise error if off-diagonal elements are negative.
+    Will also call validate_stack_of_square_matrices to ensure
+    a diagonal is well defined.
+
+    Parameters
+    ----------
+    array : (...,N,N) np.ndarray
+        Input array to check
+    name : str
+        Name of parameter to be used in error messages.
+
+    Returns
+    -------
+    bool
+        True if array is np.ndarray with no off-diagonal entries being negative,
+        last two dimensions are of equal length.
+
+    Raises
+    ------
+    TypeError
+        If array is not np.ndarray
+    ValueError
+        Any Off-diagonal elements are negative.
+        If last two dimensions do not have same length.
+    """
+
+    validate_stack_of_square_matrices(array, name)
+
+    antidiag = np.ones_like(array) - np.eye(array.shape[-1])
+
+    if np.any(antidiag * array < 0):
+        raise ValueError(f"Some off-diagonal elements in {name} are negative.")
 
     return True
 

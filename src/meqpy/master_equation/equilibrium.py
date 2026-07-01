@@ -1,10 +1,53 @@
 import numpy as np
 from scipy.linalg import null_space
 import warnings
-from ..utils.types import validate_stack_of_square_matrices, validate_nonnegative_float
+from ..utils.types import (
+    validate_nonnegative_float,
+    validate_non_negative_offdiagonal,
+    validate_nonnegative_int,
+)
 
 
-def solve_equilibrium(W, tol=1e-12):
+def solve_equilibrium(
+    W: np.ndarray, tol=1e-12, anchor: int = 0, fuzz: float = 0.0, use_2d: bool = False
+) -> np.ndarray:
+    """
+    Solve the master equation at equilibrium: W @ Peq = 0 for N-dimensional arrays
+    where the last two dimensions are the square matrix.
+
+    Parameters
+    ----------
+    W : (..., N, N) np.ndarray
+        Array with last two dimensions containing Master equation matrices.
+    tol : float, optional
+        Numerical tolerance for checking positivity of 'Peq' and property of 'W'.
+        - Non-negative.
+        - Default is 1e-12.
+    anchor: int, optional
+        Reference state with intensity before normalizing occupation vector Peq, default 0.
+    fuzz : float, optional
+        Add a rate to all transitions, relative to maximum rate in W, default 0.
+
+    Returns
+    -------
+    Peq : (..., N) np.ndarray
+        Equilibrium occupation probability vector.
+        - Sum normalized to 1.
+        - All entries ≥ 0 within 'tol'.
+
+    Notes
+    -----
+    Diagonal of last two axes of W is filled,
+        such that each column sums to zero before solving.
+    """
+
+    if use_2d:
+        return solve_equilibrium_2d(W, tol=tol)
+    else:
+        return solve_equilibrium_nd(W, tol=tol, anchor=anchor, fuzz=fuzz)
+
+
+def solve_equilibrium_2d(W, tol=1e-12):
     """
     Solve the master equation at equilibrium: W @ Peq = 0.
 
@@ -34,11 +77,14 @@ def solve_equilibrium(W, tol=1e-12):
     # check tol
     validate_nonnegative_float(tol, "tol")
 
-    # check W
-    validate_stack_of_square_matrices(W, "W", dims=2)
-
     # fill diagonal
     W = fill_diagonal(W)
+
+    # check W
+    if W.ndim != 2:
+        raise ValueError(
+            f"W must be a 2D np.ndarray, but got array with shape {W.shape}."
+        )
 
     # solve W @ Peq = 0, with scipy.null_space
     Peq = null_space(W)
@@ -65,7 +111,9 @@ def solve_equilibrium(W, tol=1e-12):
     return Peq
 
 
-def solve_equilibrium_nd(W: np.ndarray, tol=1e-12) -> np.ndarray:
+def solve_equilibrium_nd(
+    W: np.ndarray, tol=1e-12, anchor: int = 0, fuzz: float = 0.0
+) -> np.ndarray:
     """
     Solve the master equation at equilibrium: W @ Peq = 0 for N-dimensional arrays
     where the last two dimensions are the square matrix.
@@ -78,6 +126,10 @@ def solve_equilibrium_nd(W: np.ndarray, tol=1e-12) -> np.ndarray:
         Numerical tolerance for checking positivity of 'Peq' and property of 'W'.
         - Non-negative.
         - Default is 1e-12.
+    anchor: int, optional
+        Reference state with intensity before normalizing occupation vector Peq, default 0.
+    fuzz : float, optional
+        Add a rate to all transitions, relative to maximum rate in W, default 0.
 
     Returns
     -------
@@ -88,31 +140,53 @@ def solve_equilibrium_nd(W: np.ndarray, tol=1e-12) -> np.ndarray:
 
     Notes
     -----
-    If W @ Peq = 0 has multiple linearly independent solutions,
-        the first one is used and a warning is issued.
     Diagonal of last two axes of W is filled,
         such that each column sums to zero before solving.
     """
-    # check W
-    validate_stack_of_square_matrices(W, "W")
+    # check tol
+    validate_nonnegative_float(tol, "tol")
+    validate_nonnegative_int(anchor, "anchor")
+    validate_nonnegative_float(fuzz, "fuzz")
+    validate_non_negative_offdiagonal(W, "W")
 
-    # prepare output
-    Peq_shape = W.shape[:-1]
-    Peq = np.zeros(Peq_shape)
+    if anchor >= W.shape[-1]:
+        raise ValueError(
+            f"anchor must be smaller than last dimension of W, but got {anchor}."
+        )
 
-    # iterate over all indices except the last two
-    it = np.nditer(Peq[..., 0], flags=["multi_index"], op_flags=["readwrite"])
-    while not it.finished:
-        # get current index
-        idx = it.multi_index
+    if fuzz > 0:
+        W = W + fuzz * np.max(W)
 
-        # extract current W matrix
-        Wi = W[idx]
+    # fill diagonal
+    W = fill_diagonal(W)
 
-        # solve equilibrium for current W
-        Peq[idx] = solve_equilibrium(Wi, tol=tol)
+    # set occupance of anchor state to 1,
+    # then solve the rest accordingly
+    subW = np.delete(W, anchor, axis=-1)
+    subW = np.delete(subW, anchor, axis=-2)
 
-        it.iternext()
+    b = -np.delete(W[..., anchor], anchor, axis=-1)
+
+    try:
+        Peq = np.linalg.solve(subW, b[..., None])[..., 0]
+    except np.linalg.LinAlgError as err:
+        if "Singular matrix" in str(err):
+            raise ValueError(
+                "Rate Matrix W is ill defined, no single ground-state found. "
+                "Try using a different ``anchor`` or ``fuzz``."
+            )
+        else:
+            raise
+
+    # insert first state again and normalize to 1
+    Peq = np.insert(Peq, anchor, 1.0, axis=-1)
+    Peq /= np.sum(Peq, axis=-1)[..., None]
+
+    # check positivity
+    if np.any(Peq < -tol):
+        raise ValueError(
+            f"Some entries of Peq are negative beyond numerical tolerance {tol}."
+        )
 
     return Peq
 
@@ -134,7 +208,7 @@ def fill_diagonal(W: np.ndarray) -> np.ndarray:
     """
 
     # check W
-    validate_stack_of_square_matrices(W, "W")
+    validate_non_negative_offdiagonal(W, "W")
 
     sum_over_cols = np.sum(W, axis=-2)
     diag_indices = np.arange(W.shape[-1])
