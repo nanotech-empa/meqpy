@@ -300,7 +300,12 @@ class BandSystem(System):
         if squeeze:
             band_charging_rates = np.squeeze(band_charging_rates)
 
-        return band_charging_rates
+        if np.any(band_charging_rates < -1e-6):
+            raise ValueError(
+                "Some entries of band_charging_rates are negative beyond numerical tolerance of 1e-6."
+            )
+
+        return np.abs(band_charging_rates)
 
     def charging_rates(
         self,
