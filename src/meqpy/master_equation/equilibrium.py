@@ -154,8 +154,10 @@ def solve_equilibrium_nd(
             f"anchor must be smaller than last dimension of W, but got {anchor}."
         )
 
+    W = W.copy()
+
     if fuzz > 0:
-        W = W + fuzz * np.max(W)
+        W += fuzz * np.max(W)
 
     # fill diagonal
     W = fill_diagonal(W)
