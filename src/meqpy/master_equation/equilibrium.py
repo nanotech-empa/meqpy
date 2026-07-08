@@ -157,7 +157,7 @@ def solve_equilibrium_nd(
     W = W.copy()
 
     if fuzz > 0:
-        W += fuzz * np.max(W)
+        W = W + fuzz * np.max(W, axis=(-2, -1))[..., None, None]
 
     # fill diagonal
     W = fill_diagonal(W)
