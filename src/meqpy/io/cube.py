@@ -69,11 +69,14 @@ class Cube:
         return [i / num_pts * lengths[axis] for i in range(num_pts)]
 
     @property
+    def voxel_size(self):
+        """Returns the volume of a voxel in Å³"""
+        return np.dot(self.spacing[0], np.cross(self.spacing[1], self.spacing[2]))
+
+    @property
     def magsqr(self):
         """Returns the magnitude squared of the cube data."""
-        spacings = np.linalg.norm(self.spacing, axis=1)
-        voxel_size = np.prod(spacings) / BOHR**3
-        return np.sum(self.data**2) * voxel_size
+        return np.sum(self.data**2) / BOHR**3 * self.voxel_size
 
     def get_slice_data(self, distance: float, axis: int = 2) -> np.ndarray:
         """
