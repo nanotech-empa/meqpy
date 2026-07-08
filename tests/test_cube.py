@@ -25,9 +25,13 @@ def test_from_file(cube_path):
 
 def test_magsqr(cube_path):
     cube = Cube(cube_path("orbital"))
-    # Check that the values are non-negative
-    print(cube.magsqr)
     assert np.isclose(cube.magsqr, 1.0, atol=1e-3)
+
+
+def test_voxel_size(cube_path):
+    cube = Cube(cube_path("rhombic"))
+    voxel_size = np.prod(np.diag(cube.spacing))
+    assert np.isclose(cube.voxel_size, voxel_size, atol=1e-5)
 
 
 def test_get_slice(cube_path):
