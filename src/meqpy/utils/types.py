@@ -30,7 +30,9 @@ def _make_bounded_number_validator(caster, type_check, *, minimum=None):
 
 
 validate_nonnegative_float = _make_bounded_number_validator(float, Real, minimum=0)
+validate_float_larger_one = _make_bounded_number_validator(float, Real, minimum=1)
 validate_nonnegative_int = _make_bounded_number_validator(int, int, minimum=0)
+validate_positive_int = _make_bounded_number_validator(int, int, minimum=1)
 
 
 def require_type(value: object, expected: type, name="value"):

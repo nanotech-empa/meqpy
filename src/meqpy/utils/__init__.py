@@ -1,6 +1,8 @@
 from .types import (
     validate_nonnegative_float,
+    validate_float_larger_one,
     validate_nonnegative_int,
+    validate_positive_int,
     validate_real_or_1darray,
     validate_stack_of_square_matrices,
     validate_non_negative_offdiagonal,
@@ -17,7 +19,9 @@ __all__ = [
     "KappaMode",
     "LineShape",
     "validate_nonnegative_float",
+    "validate_float_larger_one",
     "validate_nonnegative_int",
+    "validate_positive_int",
     "validate_real_or_1darray",
     "validate_stack_of_square_matrices",
     "validate_non_negative_offdiagonal",
