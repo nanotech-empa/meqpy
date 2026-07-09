@@ -1,5 +1,5 @@
 from numbers import Real
-from ..utils import require_type
+from ..utils import require_type, validate_positive_int
 
 
 class State:
@@ -35,8 +35,7 @@ class State:
 
     @label.setter
     def label(self, new_label: str):
-        require_type(new_label, str, "new_label")
-        self._label = new_label
+        self._label = require_type(new_label, str, "new_label")
 
     @property
     def energy(self) -> float:
@@ -65,12 +64,7 @@ class State:
 
     @multiplicity.setter
     def multiplicity(self, new_multiplicity):
-        require_type(new_multiplicity, int, "new_multiplicity")
-        if new_multiplicity <= 0:
-            raise ValueError(
-                f"multiplicity must be larger than zero, but got {new_multiplicity}."
-            )
-        self._multiplicity = new_multiplicity
+        self._multiplicity = validate_positive_int(new_multiplicity, "new_multiplicity")
 
     def __repr__(self):
         attrs = f"label={self.label}, energy={self.energy}, charge={self.charge}, multiplicity={self.multiplicity}"

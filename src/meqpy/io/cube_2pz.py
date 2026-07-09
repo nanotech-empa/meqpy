@@ -80,7 +80,7 @@ class Cube_2pz(Cube):
 
         require_type(boundary, Real, "boundary")
 
-        self.boundary = boundary
+        self.boundary = float(boundary)
 
         self.spacing = np.eye(3) * validate_nonnegative_float(spacing, "spacing")
 
