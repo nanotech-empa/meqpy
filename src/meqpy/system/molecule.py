@@ -430,7 +430,8 @@ class Molecule(System):
         bias: float | np.ndarray = 0.0,
         kappa_mode: str = None,
         squeeze: bool = True,
-        suppress_warning: bool = False,
+        warn_missing_dysons: bool = True,
+        suppress_mem_warning: bool = False,
     ) -> np.ndarray:
         """Get transition rates by charging of system, including coupling via Dyson orbitals:
         transition rate = coupling strength_dyson(x,y) * normalized charging transition * Clebsch-Gordan factors
@@ -445,7 +446,10 @@ class Molecule(System):
             Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
         squeeze : bool, optional
             The returned array is squeezed to remove any dimensions of size 1, default is `True`.
-        suppress_warning : bool, optional
+        warn_missing_dysons: bool, optional
+            Raise a warning, in case some charging transitions are missing a Dyson instance, default True.
+            In case of missing Dyson instance, the transition will be set to zero.
+        suppress_mem_warning : bool, optional
             If False (default): Warn if array is expected to exceed 4GB in memeroy.
 
         Returns
@@ -468,7 +472,7 @@ class Molecule(System):
         z = validate_real_or_1darray(z, "z")
         bias = validate_real_or_1darray(bias, "bias")
 
-        if not suppress_warning:
+        if not suppress_mem_warning:
             out_shape = z.shape + bias.shape + self.shape
             size_GB = np.prod(out_shape) * 8 * 1e-9  # 8 bytes per value
             if size_GB > 4:
@@ -486,6 +490,7 @@ class Molecule(System):
             bias,
             kappa_mode=kappa_mode,
             squeeze=False,
+            warn_missing_dysons=warn_missing_dysons,
         )
         charging_rates *= self.normalized_charging_transitions(bias, squeeze=False)
         charging_rates *= self.clebsch_gordan_factors
@@ -502,6 +507,7 @@ class Molecule(System):
         bias: float | np.ndarray = 0.0,
         kappa_mode: str = None,
         squeeze: bool = True,
+        warn_missing_dysons: bool = True,
     ) -> np.ndarray:
         """Get transition rates by charging of system, including coupling via Dyson orbitals at certain points in the xy-plane.
         This method is a for-loop wrapper for `Molecule.charging_rates_dyson()`,
@@ -519,6 +525,9 @@ class Molecule(System):
             Optional parameter to temporarily overwrite kappa_mode. If None (default), `self.kappa_mode` will be used.
         squeeze : bool, optional
             The returned array is squeezed to remove any dimensions of size 1, default is `True`.
+        warn_missing_dysons: bool, optional
+            Raise a warning, in case some charging transitions are missing a Dyson instance, default True.
+            In case of missing Dyson instance, the transition will be set to zero.
 
         Returns
         -------
@@ -550,6 +559,7 @@ class Molecule(System):
                     jbias,
                     kappa_mode=kappa_mode,
                     squeeze=False,
+                    warn_missing_dysons=warn_missing_dysons,
                 )
 
                 for k, point in enumerate(points):
