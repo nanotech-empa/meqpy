@@ -354,13 +354,19 @@ class Molecule(System):
             validate_sequence_of_pairs(xy_pairs, Real, "xy_pairs")
             single_pair = False
 
+        coords_to_indices_mat = np.linalg.inv(self.spacing[:, :2]).T
+
         indices = []
         for xy in xy_pairs:
             coords = np.array(xy) - self.origin
-            coords_to_indices_mat = np.linalg.inv(self.spacing[:, :2]).T
             ij_float = coords_to_indices_mat @ coords
             ij_int = tuple([int(round(i)) for i in ij_float])
-
+            if (
+                min(ij_int) < 0
+                or ij_int[0] >= self.shape[0]
+                or ij_int[1] >= self.shape[1]
+            ):
+                raise IndexError(f"Coordinates {xy} out of range.")
             indices.append(ij_int)
 
         # keep output in same form as input
