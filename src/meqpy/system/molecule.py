@@ -332,14 +332,11 @@ class Molecule(System):
 
         return pad_lin_extrapolate(ax, self.padding)
 
-    def _xy_indices_in_range(self, ij_indices: tuple[int, int]):
+    def _validated_xy_indices(self, ij_indices: tuple[int, int], name: str) -> bool:
         """Check if tuple of indices is within range of Dyson orbitals."""
-        for k in range(2):
-            if ij_indices[k] < 0:
-                return False
-            elif ij_indices[k] >= self.shape[k]:
-                return False
-        return True
+        if 0 <= ij_indices[0] < self.shape[0] and 0 <= ij_indices[1] < self.shape[1]:
+            return True
+        raise IndexError(f"Coordinates {name} out of range.")
 
     def get_xy_indices(self, xy_pairs: Sequence) -> list[tuple[int, int]]:
         """Translate coordinates of points in xy-plane to indices for existing Dyson orbitals.
@@ -370,8 +367,7 @@ class Molecule(System):
             coords = np.array(xy) - self.origin
             ij_float = coords_to_indices_mat @ coords
             ij_int = tuple([int(round(i)) for i in ij_float])
-            if not self._xy_indices_in_range(ij_int):
-                raise IndexError(f"Coordinates {xy} out of range.")
+            self._validated_xy_indices(ij_int, f"{xy}")
             indices.append(ij_int)
 
         # keep output in same form as input
