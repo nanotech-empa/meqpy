@@ -431,7 +431,7 @@ class Molecule(System):
         kappa_mode: str = None,
         squeeze: bool = True,
         warn_missing_dysons: bool = True,
-        suppress_mem_warning: bool = False,
+        mem_warn_limit: float = 4.0,
     ) -> np.ndarray:
         """Get transition rates by charging of system, including coupling via Dyson orbitals:
         transition rate = coupling strength_dyson(x,y) * normalized charging transition * Clebsch-Gordan factors
@@ -449,8 +449,8 @@ class Molecule(System):
         warn_missing_dysons: bool, optional
             Raise a warning, in case some charging transitions are missing a Dyson instance, default True.
             In case of missing Dyson instance, the transition will be set to zero.
-        suppress_mem_warning : bool, optional
-            If False (default): Warn if array is expected to exceed 4GB in memeroy.
+        mem_warn_limit : float, optional
+            Warn if memory usage of array is expected to exceed mem_warn_limit in GB, default is 4.0.
 
         Returns
         -------
@@ -472,18 +472,15 @@ class Molecule(System):
         z = validate_real_or_1darray(z, "z")
         bias = validate_real_or_1darray(bias, "bias")
 
-        if not suppress_mem_warning:
-            out_shape = z.shape + bias.shape + self.shape
-            size_GB = np.prod(out_shape) * 8 * 1e-9  # 8 bytes per value
-            if size_GB > 4:
-                warn_message = (
-                    f"Array expected to require more than {size_GB:.1f}GB of memory."
-                )
-                if len(z) > 1 or len(bias) > 1:
-                    warn_message += (
-                        " Consider using `Molecule.charging_rates_pointspec()`."
-                    )
-                warn(warn_message)
+        out_shape = z.shape + bias.shape + self.shape
+        size_GB = np.prod(out_shape) * 8 * 1e-9  # 8 bytes per value
+        if size_GB > mem_warn_limit:
+            warn_message = (
+                f"Array expected to require more than {size_GB:.1f}GB of memory."
+            )
+            if len(z) > 1 or len(bias) > 1:
+                warn_message += " Consider using `Molecule.charging_rates_pointspec()`."
+            warn(warn_message)
 
         charging_rates = self.coupling_strength_dyson(
             z,
