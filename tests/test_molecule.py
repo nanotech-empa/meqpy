@@ -149,7 +149,7 @@ def test_get_xy_points(make_molecule_with_dyson):
 def test_get_xy_points_out_of_range(make_molecule_with_dyson):
     molecule, _ = make_molecule_with_dyson("rhombic", padding=5)
     with pytest.raises(IndexError) as e_info:
-        molecule.get_xy_indices((-6.41336, -0.65322)) == (7, 8)
+        molecule.get_xy_indices((-6.41336, -0.65322))
     assert "out of range." in str(e_info.value)
 
 
