@@ -1,7 +1,7 @@
 import numpy as np
 from numbers import Real
 
-from ..utils import validate_real_or_1darray, validate_nonnegative_float, require_type
+from ..utils import validate_nonnegative_float, require_type
 from ..utils.constants import EV_TO_K2
 
 
@@ -65,8 +65,8 @@ class BandTransition:
 
     @kpar_offset.setter
     def kpar_offset(self, value: float):
-        validate_real_or_1darray(value, "kpar_offset")
-        self._kpar_offset = value
+        require_type(value, Real, "value")
+        self._kpar_offset = float(value)
 
     @property
     def effective_mass(self) -> float:
@@ -76,7 +76,7 @@ class BandTransition:
     @effective_mass.setter
     def effective_mass(self, value: float):
         require_type(value, Real, "effective_mass")
-        self._effective_mass = value
+        self._effective_mass = float(value)
 
     @property
     def bandwidth(self) -> float:
@@ -85,8 +85,7 @@ class BandTransition:
 
     @bandwidth.setter
     def bandwidth(self, value: float):
-        validate_nonnegative_float(value, "bandwidth")
-        self._bandwidth = value
+        self._bandwidth = validate_nonnegative_float(value, "bandwidth")
         self._energy_cache = None  # invalidate cache
 
     @property
@@ -96,8 +95,7 @@ class BandTransition:
 
     @e_offset.setter
     def e_offset(self, value: float):
-        validate_nonnegative_float(value, "e_offset")
-        self._e_offset = value
+        self._e_offset = validate_nonnegative_float(value, "e_offset")
 
     @property
     def hwhm(self) -> float:
@@ -106,8 +104,7 @@ class BandTransition:
 
     @hwhm.setter
     def hwhm(self, value: float):
-        validate_nonnegative_float(value, "hwhm")
-        self._hwhm = value
+        self._hwhm = validate_nonnegative_float(value, "hwhm")
         self._energy_cache = None  # invalidate cache
 
     @property
@@ -120,7 +117,7 @@ class BandTransition:
         require_type(value, Real, "dx")
         if value <= 0:
             raise ValueError(f"dx must be positive, but got {value}.")
-        self._dx = value
+        self._dx = float(value)
         self._energy_cache = None  # invalidate cache
 
     # ------------------------------------------------------------------

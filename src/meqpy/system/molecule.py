@@ -2,7 +2,7 @@ from .system import System
 from .dyson import Dyson
 from ..utils.types import (
     validate_real_or_1darray,
-    validate_nonnegative_float,
+    validate_float_larger_one,
     validate_nonnegative_int,
     validate_sequence_of_pairs,
     validate_pair,
@@ -51,8 +51,7 @@ class Molecule(System):
 
     @tip_radius.setter
     def tip_radius(self, tip_radius):
-        if validate_nonnegative_float(tip_radius, "tip_radius"):
-            self._tip_radius = tip_radius
+        self._tip_radius = validate_float_larger_one(tip_radius, "tip_radius")
 
     @property
     def padding(self) -> int:
@@ -61,8 +60,7 @@ class Molecule(System):
 
     @padding.setter
     def padding(self, padding):
-        if validate_nonnegative_int(padding, "padding"):
-            self._padding = padding
+        self._padding = validate_nonnegative_int(padding, "padding")
 
     def _add_dyson_to_dict(
         self, a: str | int, b: str | int, dyson: Dyson, register: dict

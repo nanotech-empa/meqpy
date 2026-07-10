@@ -9,6 +9,32 @@ def test_init_with_kwargs(make_molecule):
     assert molecule.padding == 2
 
 
+def test_tip_radius_setter(make_molecule):
+    molecule = make_molecule()
+    molecule.tip_radius = 3.0
+    assert molecule.tip_radius == 3.0
+    with pytest.raises(TypeError) as e_info:
+        molecule.tip_radius = "abc"
+    assert "tip_radius must be Real" in str(e_info.value)
+    with pytest.raises(ValueError) as e_info:
+        molecule.tip_radius = 0
+    assert "tip_radius must be >= 1" in str(e_info.value)
+
+
+def test_padding_setter(make_molecule):
+    molecule = make_molecule()
+    molecule.padding = 20
+    assert molecule.padding == 20
+    molecule.padding = 0
+    assert molecule.padding == 0
+    with pytest.raises(TypeError) as e_info:
+        molecule.padding = "abc"
+    assert "padding must be int" in str(e_info.value)
+    with pytest.raises(ValueError) as e_info:
+        molecule.padding = -1
+    assert "padding must be >= 0" in str(e_info.value)
+
+
 def test_add_and_get_dyson(make_molecule_with_dyson):
     molecule, dyson = make_molecule_with_dyson("cartesian")
     assert molecule.dyson_dict == {("GS", "PIR"): dyson}
