@@ -65,7 +65,8 @@ class BandTransition:
 
     @kpar_offset.setter
     def kpar_offset(self, value: float):
-        self._kpar_offset = validate_nonnegative_float(value, "kpar_offset")
+        require_type(value, Real, "value")
+        self._kpar_offset = float(value)
 
     @property
     def effective_mass(self) -> float:
