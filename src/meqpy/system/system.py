@@ -510,7 +510,7 @@ class System:
         -----
         This method is a simple wrapper for combining:
             * `self.coupling_strength`
-            * `self.normalized_charging_transition`
+            * `self.normalized_charging_transitions`
             * `self.clebsch_gordan_factors`
         """
 
