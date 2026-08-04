@@ -1,6 +1,7 @@
 from .state import State
 from ..utils import (
     LineShape,
+    call_lineshape_and_validate_output,
     KappaMode,
     validate_real_or_1darray,
     validate_nonnegative_float,
@@ -8,7 +9,7 @@ from ..utils import (
 )
 from ..utils import decay_constant, lineshape_integral
 from ..utils.constants import G0  # in 1/Vs
-from typing import Optional, Sequence
+from typing import Optional, Sequence, Callable
 import numpy as np
 from numbers import Real
 
@@ -23,7 +24,7 @@ class System:
         name: Optional[str] = None,
         states: Optional[Sequence] = None,
         hwhm: float = 0.0,
-        lineshape: LineShape = LineShape.GAUSS,
+        lineshape: LineShape | str | Callable = LineShape.GAUSS,
         workfunction: float = 5.0,
         reorg_shift: float = 0.0,
         kappa_mode: KappaMode = KappaMode.FULL,
@@ -40,7 +41,8 @@ class System:
         hwhm : float, optional
             Half width at half maximum of energy dependent transition rate in eV, by default 0.0
         lineshape : str, optional
-            Lineshape of transition rate derivative: 'gaussian', 'lorentzian' or 'dirac'., by default "gaussian"
+            Lineshape of transition rate derivative: 'gaussian', 'lorentzian', 'dirac',
+            or a custom callable f(x: np.ndarray) -> np.ndarray, by default 'gaussian'
         workfunction : float, optional
             Workfunction of System in eV, by default 5.0
         reorg_shift : float, optional
@@ -91,12 +93,18 @@ class System:
 
     @property
     def lineshape(self) -> str:
-        """Lineshape of transition rate derivative: 'gaussian', 'lorentzian' or 'dirac'."""
+        """Lineshape of transition rate derivative: 'gaussian', 'lorentzian', 'dirac',
+        or a custom callable f(x: np.ndarray) -> np.ndarray."""
+        if callable(self._lineshape):
+            return self._lineshape
         return self._lineshape.value
 
     @lineshape.setter
-    def lineshape(self, lineshape: str):
-        self._lineshape = LineShape(lineshape)
+    def lineshape(self, lineshape: LineShape | str | Callable):
+        if callable(lineshape):
+            self._lineshape = lineshape
+        else:
+            self._lineshape = LineShape(lineshape)
 
     @property
     def workfunction(self) -> float:
@@ -439,10 +447,14 @@ class System:
 
         # offset voltages by energies of ion resonances --> shape (M,N,N)
         energy_arg = -self.dE[None, ...] - self.dQ[None, ...] * bias[:, None, None]
-        energy_arg += -self.reorg_shift
 
-        # voltage dependend transition probability for charging
-        W_charging = lineshape_integral(self._lineshape, energy_arg, self.hwhm)
+        if callable(self._lineshape):
+            W_charging = call_lineshape_and_validate_output(self._lineshape, energy_arg)
+        else:
+            energy_arg += -self.reorg_shift
+
+            # voltage dependend transition probability for charging
+            W_charging = lineshape_integral(self._lineshape, energy_arg, self.hwhm)
 
         # assert only charging transitions with dQ == +1 or -1 are non-zero
         W_charging *= np.abs(self.dQ) == 1
