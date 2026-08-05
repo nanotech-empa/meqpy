@@ -49,7 +49,7 @@ def call_lineshape_and_validate_output(
         ) from exc
 
     require_type(array_out, np.ndarray, "Output of lineshape")
-    if not np.issubdtype(array_out.dtype, float):
+    if not np.issubdtype(array_out.dtype, np.floating):
         raise TypeError(
             "Output of custom lineshape must be array of float, "
             f"but dtype of array is {array_out.dtype}"
