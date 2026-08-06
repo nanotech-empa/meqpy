@@ -11,11 +11,6 @@ from meqpy.utils.lineshape import (
 )
 
 
-# ---------------------------------------------------------------------
-# 1. Built-in lineshapes: pure math correctness
-# ---------------------------------------------------------------------
-
-
 class TestBuiltinLineshapeMath:
     """Check the closed-form integrals directly, independent of System."""
 
@@ -48,11 +43,6 @@ class TestBuiltinLineshapeMath:
         assert narrow_val > wide_val
 
 
-# ---------------------------------------------------------------------
-# 2. lineshape_integral() dispatch (string/enum path only, per current branch)
-# ---------------------------------------------------------------------
-
-
 class TestLineshapeIntegral:
     @pytest.mark.parametrize("name", ["gaussian", "lorentzian", "dirac"])
     def test_accepts_string_and_enum(self, name):
@@ -60,7 +50,7 @@ class TestLineshapeIntegral:
         val_from_enum = lineshape_integral(LineShape(name), 0.3, hwhm=1.0)
         assert val_from_str == val_from_enum
 
-    def test_zero_hwhm_forces_dirac_regardless_of_choice(self):
+    def test_zero_hwhm_forces_dirac(self):
         # hwhm == 0 short-circuits to LineShape.DIRAC even if "gaussian" was requested.
         x = np.linspace(-1.0, 1.0, 200)
         result = lineshape_integral("gaussian", x, hwhm=0.0)
@@ -79,11 +69,6 @@ class TestLineshapeIntegral:
             lineshape_integral(lambda x: x, 0.0, hwhm=1.0)
 
 
-# ---------------------------------------------------------------------
-# 3. call_lineshape_and_validate_output(): the custom-callable contract
-# ---------------------------------------------------------------------
-
-
 class TestCustomLineshapeValidation:
     def test_valid_callable_passes_through(self):
         def func(x):
@@ -98,7 +83,7 @@ class TestCustomLineshapeValidation:
         with pytest.raises(TypeError):
             call_lineshape_and_validate_output("not_callable", np.zeros((2, 2)))
 
-    def test_exception_inside_callable_is_wrapped_as_valueerror(self):
+    def test_exception_inside_callable_raises_valueerror(self):
         def broken(x):
             raise RuntimeError("boom")
 
@@ -133,8 +118,3 @@ class TestCustomLineshapeValidation:
 
         with pytest.raises(TypeError):
             call_lineshape_and_validate_output(func, np.zeros((2, 2)))
-
-
-# ---------------------------------------------------------------------
-# 4. System integration
-# ---------------------------------------------------------------------

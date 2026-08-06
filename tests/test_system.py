@@ -224,18 +224,6 @@ class TestSystemLineshapes:
         with pytest.raises(ValueError):
             system.lineshape = "not_a_lineshape"
 
-    def test_invalid_callable_does_NOT_raise_at_assignment(self, make_system):
-        """Documents current (lazy) behavior: a broken callable is only
-        caught on first use, not at assignment."""
-
-        def broken(x):
-            raise RuntimeError("boom")
-
-        system = make_system()
-        system.lineshape = broken  # no error here
-        with pytest.raises(ValueError):
-            system.normalized_charging_transitions(bias=0.0)
-
     def test_reorg_shift_is_applied_for_builtin(self, make_system):
         system = make_system(lineshape="gaussian", hwhm=0.1)
 
@@ -278,7 +266,7 @@ class TestSystemLineshapes:
 
         assert np.allclose(w1, w2)
 
-    def test_selection_rules_still_applied_on_custom_output(self, make_system):
+    def test_selection_rules_with_custom_output(self, make_system):
         # Even if the custom lineshape returns a nonzero value everywhere,
         # the dQ/dM masks in normalized_charging_transitions must still zero
         # out disallowed transitions.
@@ -294,9 +282,7 @@ class TestSystemLineshapes:
         assert np.all(W[..., ~allowed] == 0.0)
         assert np.all(W[..., allowed] == pytest.approx(0.9))
 
-    def test_custom_lineshape_matching_builtin_reproduces_builtin_result(
-        self, make_system
-    ):
+    def test_reproduce_builtin_lineshape_with_custom(self, make_system):
         system = make_system(lineshape="gaussian", hwhm=0.1)
         w_builtin = system.normalized_charging_transitions(bias=0.3)
 

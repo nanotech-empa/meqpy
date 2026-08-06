@@ -24,7 +24,7 @@ class System:
         name: Optional[str] = None,
         states: Optional[Sequence] = None,
         hwhm: float = 0.0,
-        lineshape: LineShape | str | Callable = LineShape.GAUSS,
+        lineshape: LineShape | Callable = LineShape.GAUSS,
         workfunction: float = 5.0,
         reorg_shift: float = 0.0,
         kappa_mode: KappaMode = KappaMode.FULL,
