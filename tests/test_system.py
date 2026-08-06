@@ -282,7 +282,7 @@ class TestSystemLineshapes:
         assert np.all(W[..., ~allowed] == 0.0)
         assert np.all(W[..., allowed] == pytest.approx(0.9))
 
-    def test_reproduce_builtin_lineshape_with_custom(self, make_system):
+    def test_custom_lineshape_matches_builtin(self, make_system):
         system = make_system(lineshape="gaussian", hwhm=0.1)
         w_builtin = system.normalized_charging_transitions(bias=0.3)
 

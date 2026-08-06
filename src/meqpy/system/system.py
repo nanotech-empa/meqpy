@@ -1,7 +1,7 @@
 from .state import State
 from ..utils import (
     LineShape,
-    call_lineshape_and_validate_output,
+    evaluate_lineshape,
     KappaMode,
     validate_real_or_1darray,
     validate_nonnegative_float,
@@ -449,7 +449,7 @@ class System:
         energy_arg = -self.dE[None, ...] - self.dQ[None, ...] * bias[:, None, None]
 
         if callable(self._lineshape):
-            W_charging = call_lineshape_and_validate_output(self._lineshape, energy_arg)
+            W_charging = evaluate_lineshape(self._lineshape, energy_arg)
         else:
             energy_arg += -self.reorg_shift
 

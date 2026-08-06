@@ -4,7 +4,7 @@ import pytest
 from meqpy.utils.lineshape import (
     LineShape,
     lineshape_integral,
-    call_lineshape_and_validate_output,
+    evaluate_lineshape,
     dirac_lineshape_integral,
     gaussian_lineshape_integral,
     lorentzian_lineshape_integral,
@@ -75,41 +75,41 @@ class TestCustomLineshapeValidation:
             return np.clip(0.5 + x, 0.0, 1.0)
 
         x = np.linspace(-10, 10, 250).reshape(-1, 5, 5)
-        out = call_lineshape_and_validate_output(func, x)
+        out = evaluate_lineshape(func, x)
         assert out.shape == x.shape
         assert np.allclose(out, func(x))
 
     def test_non_callable_raises_typeerror(self):
         with pytest.raises(TypeError):
-            call_lineshape_and_validate_output("not_callable", np.zeros((2, 2)))
+            evaluate_lineshape("not_callable", np.zeros((2, 2)))
 
-    def test_exception_inside_callable_raises_valueerror(self):
+    def test_callable_raises_valueerror(self):
         def broken(x):
             raise RuntimeError("boom")
 
         with pytest.raises(ValueError, match="raised an exception"):
-            call_lineshape_and_validate_output(broken, np.zeros((2, 2)))
+            evaluate_lineshape(broken, np.zeros((2, 2)))
 
     def test_non_ndarray_output_raises_typeerror(self):
         def func(x):
             return 0.5
 
         with pytest.raises(TypeError):
-            call_lineshape_and_validate_output(func, np.zeros((2, 2)))
+            evaluate_lineshape(func, np.zeros((2, 2)))
 
     def test_shape_mismatch_raises_valueerror(self):
         def func(x):
             return np.zeros(x.shape + (1,))  # wrong shape
 
         with pytest.raises(ValueError, match="same shape"):
-            call_lineshape_and_validate_output(func, np.zeros((3, 3)))
+            evaluate_lineshape(func, np.zeros((3, 3)))
 
     @pytest.mark.parametrize("dtype", [np.float32, np.float64, np.float16, float])
     def test_accepts_all_float_dtypes(self, dtype):
         def func(x):
             return x.astype(dtype) * 0 + 0.5
 
-        out = call_lineshape_and_validate_output(func, np.zeros((2, 2)))
+        out = evaluate_lineshape(func, np.zeros((2, 2)))
         assert out.dtype == dtype
 
     def test_integer_dtype_output_raises_typeerror(self):
@@ -117,4 +117,4 @@ class TestCustomLineshapeValidation:
             return np.zeros(x.shape, dtype=int)
 
         with pytest.raises(TypeError):
-            call_lineshape_and_validate_output(func, np.zeros((2, 2)))
+            evaluate_lineshape(func, np.zeros((2, 2)))

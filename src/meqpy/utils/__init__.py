@@ -14,7 +14,7 @@ from .decay_constant import KappaMode, decay_constant
 from .lineshape import (
     LineShape,
     lineshape_integral,
-    call_lineshape_and_validate_output,
+    evaluate_lineshape,
 )
 from .coordinates import pad_lin_extrapolate, value_to_index
 from .tersoff_hamann import ldos_to_rate
@@ -22,7 +22,7 @@ from .tersoff_hamann import ldos_to_rate
 __all__ = [
     "KappaMode",
     "LineShape",
-    "call_lineshape_and_validate_output",
+    "evaluate_lineshape",
     "validate_nonnegative_float",
     "validate_float_larger_one",
     "validate_nonnegative_int",

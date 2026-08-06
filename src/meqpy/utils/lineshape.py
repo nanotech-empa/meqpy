@@ -13,8 +13,8 @@ class LineShape(str, ValidatedEnum):
     DIRAC = "dirac"
 
 
-def call_lineshape_and_validate_output(
-    lineshape: Callable, x: np.ndarray
+def evaluate_lineshape(
+    lineshape: Callable[[np.ndarray], np.ndarray], x: np.ndarray
 ) -> np.ndarray:
     """Call the custom lineshape function and sanity check output.
 
