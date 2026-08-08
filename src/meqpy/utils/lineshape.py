@@ -16,28 +16,8 @@ class LineShape(str, ValidatedEnum):
 def evaluate_lineshape(
     lineshape: Callable[[np.ndarray], np.ndarray], x: np.ndarray
 ) -> np.ndarray:
-    """Call the custom lineshape function and sanity check output.
+    """Call the custom lineshape function and sanity check output."""
 
-    Parameters
-    ----------
-    lineshape : Callable
-        Custom lineshape function, should be step like function.
-    x : np.ndarray
-        Energy variable.
-
-    Returns
-    -------
-    np.ndarray
-        Output of custom lineshape function.
-
-    Raises
-    ------
-    ValueError
-        - if exception is raised when calling custom lineshape function
-        - if output does not match shape of ``x``
-    TypeError
-        - if custom lineshape is not callable
-    """
     require_type(lineshape, Callable, "lineshape")
 
     try:
