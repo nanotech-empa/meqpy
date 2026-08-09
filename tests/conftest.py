@@ -1,7 +1,7 @@
 import pytest
+import numpy as np
 from pathlib import Path
 from meqpy.system import System, Dyson, Molecule, State, BandSystem, BandTransition
-
 
 # Dir file to store test data files, if needed in the future
 DATA_DIR = Path(__file__).parent / "data"
@@ -114,3 +114,16 @@ def make_bandsystem_with_band(make_bandsystem):
         return bandsystem, key
 
     return _resolve
+
+
+@pytest.fixture
+def meshgrid():
+    """Return generator for symmetric meshgrids with shape (21,21,21) or (21,21,1)."""
+
+    def mesh_gen(z_value=None):
+        lin = np.arange(-5, 5.5, 0.5)
+        if z_value is None:
+            z_value = lin
+        return np.meshgrid(lin, lin, z_value, indexing="ij")
+
+    return mesh_gen
