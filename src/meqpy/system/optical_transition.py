@@ -92,11 +92,17 @@ class OpticalTransition(Transition):
             )
 
         COULOMB_FAC = ELEMENTARY_CHARGE / 4 / np.pi / EPSILON_0  # V/Å
-        return COULOMB_FAC / np.sqrt(
+
+        distance = np.sqrt(
             (x_pointcharge - mesh_x) ** 2
             + (y_pointcharge - mesh_y) ** 2
             + (z_pointcharge - mesh_z) ** 2
         )
+
+        too_close = distance < 1.0
+        safe_distance = np.where(too_close, 1.0, distance)
+        COULOMB_FAC = ELEMENTARY_CHARGE / 4 / np.pi / EPSILON_0  # V/Å
+        return np.where(too_close, 0.0, COULOMB_FAC / safe_distance)
 
     @classmethod
     def _two_point_charges(
