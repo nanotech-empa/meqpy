@@ -27,6 +27,8 @@ class Transition:
         self.spacing = None
         """Spacing of cube data points in Angstrom."""
 
+        self.data = np.empty(0)
+
         cube = self.file_to_cube(cube)
         self.parse_cube_dimensions(cube, center_mass)
 
@@ -106,6 +108,11 @@ class Transition:
         """Stepsize between each points in Angstrom"""
         return np.linalg.norm(self.spacing, axis=1)
 
+    @property
+    def shape(self) -> tuple[int, ...]:
+        """Shape of sliced data."""
+        return self.data.shape
+
     def grid(self, pad: int = 0):
         """Axis grid of data in internal coordinates.
 
@@ -178,6 +185,21 @@ class Transition:
 
         return self.grid()[axis] + self.origin[axis]
 
+    @property
+    def x(self):
+        """x values of cube grid"""
+        return self.get_cart_axis(0)
+
+    @property
+    def y(self):
+        """y values of cube grid"""
+        return self.get_cart_axis(1)
+
+    @property
+    def z(self):
+        """z values of cube grid"""
+        return self.get_cart_axis(2)
+
     def mesh_cartesian(self, pad: int = 0):
         """Create meshgrid of data points in cartesian coordinates.
 
@@ -204,7 +226,7 @@ class Transition:
 
         validate_nonnegative_int(pad, "pad")
 
-        if not hasattr(self, "data"):
+        if self.shape == (0,):
             raise AttributeError("No volumetric data in object.")
 
         num_pts = [range(-pad, n + pad) for n in self.data.shape]
