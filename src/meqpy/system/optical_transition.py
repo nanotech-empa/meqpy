@@ -3,11 +3,14 @@ from numbers import Real
 
 import numpy as np
 from scipy.signal import fftconvolve
+import scipy.constants as const
 
 from .transition import Transition
 from ..io.cube import Cube
 from ..utils.types import validate_nonnegative_int, require_type
 from ..utils.constants import BOHR, ELEMENTARY_CHARGE
+
+EPSILON_0 = const.epsilon_0 * 1e-10  # As/Vm * m/Å = As/VÅ
 
 
 class OpticalTransition(Transition):
@@ -44,11 +47,12 @@ class OpticalTransition(Transition):
     @property
     def voxel_size(self):
         """Returns the volume of a voxel in Å³"""
-        return np.dot(self.spacing[0], np.cross(self.spacing[1], self.spacing[2]))
+        volume = np.dot(self.spacing[0], np.cross(self.spacing[1], self.spacing[2]))
+        return abs(volume)
 
     def _kernel_mesh(self, pad: int = 0):
-        """Create Meshgrid of shape ``(2*nx+1, 2*ny+1, nz)``
-        with x,y axis being symmetric around 0."""
+        """Create Meshgrid of shape ``(2*nx'+1, 2*ny'+1, nz)``
+        with x,y axis being symmetric around 0, with ni' = ni + 2*pad."""
 
         validate_nonnegative_int(pad, "pad")
 
@@ -87,8 +91,8 @@ class OpticalTransition(Transition):
                 f"arrays with shape {mesh_x.shape},  {mesh_y.shape}, and  {mesh_z.shape}"
             )
 
-        COULOMB_FAC = ELEMENTARY_CHARGE / 4 / np.pi / 8.854187e-22  # As / V Ang
-        return COULOMB_FAC * np.sqrt(
+        COULOMB_FAC = ELEMENTARY_CHARGE / 4 / np.pi / EPSILON_0  # V/Å
+        return COULOMB_FAC / np.sqrt(
             (x_pointcharge - mesh_x) ** 2
             + (y_pointcharge - mesh_y) ** 2
             + (z_pointcharge - mesh_z) ** 2
@@ -106,7 +110,7 @@ class OpticalTransition(Transition):
         y_pointcharge: float = 0,
     ):
         """Fill meshgrid with Coulomb potential of two elementary charge located
-        at position (x, y, z) and (x, y, 2 * mirror_planel - z)."""
+        at position (x, y, z) and (x, y, 2 * mirror_plane - z)."""
 
         require_type(mirror_plane, Real, "mirror_plane")
         require_type(z_pointcharge, Real, "z_pointcharge")
@@ -176,7 +180,7 @@ class OpticalTransition(Transition):
         plasmon_coupling = self.plasmon_coupling(mirror_plane, z_pointcharge, pad)
         emission_strength = plasmon_coupling**2
 
-        if normalize:
-            emission_strength /= np.max(emission_strength)
+        if normalize and emission_strength.max() > 0:
+            emission_strength /= emission_strength.max()
 
         return emission_strength
