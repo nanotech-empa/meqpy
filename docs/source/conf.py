@@ -23,13 +23,22 @@ extensions = [
     "myst_nb",  # render Jupyter notebooks as doc pages
 ]
 
+# Markdown (MyST) extras
+myst_enable_extensions = ["dollarmath", "amsmath"]
+
+# The notebooks use GitHub-style `
+myst_fence_as_directive = ["math"]
+
 # Notebooks: render the outputs already saved in the .ipynb files,
 # don't re-execute them on Read the Docs (no compute needed there).
 nb_execution_mode = "off"
 
 # The tutorials use raw-HTML anchors (<a id='...'>) for internal navigation.
 # They work in the built pages, but myst can't verify them and would warn.
-suppress_warnings = ["myst.xref_missing"]
+suppress_warnings = [
+    "myst.xref_missing",  # raw-HTML anchors work but can't be verified
+    "myst.header",  # notebooks jump H1 -> H3 for chapter numbering
+]
 
 templates_path = ["_templates"]
 
