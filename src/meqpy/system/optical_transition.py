@@ -29,7 +29,7 @@ class OpticalTransition(Transition):
 
         Parameters
         ----------
-        cube : Cube | str | os.PathLike, optional
+        cube : Cube | str | os.PathLike
             Cube object, or path to cube file containing transition density orbital.
         center_mass : bool, optional
             Shift origin of coordinate system to molecule's center of mass, default is True.
@@ -90,8 +90,6 @@ class OpticalTransition(Transition):
                 "mesh_x, mesh_y and mesh_z must be of same shape, but got "
                 f"arrays with shape {mesh_x.shape},  {mesh_y.shape}, and  {mesh_z.shape}"
             )
-
-        COULOMB_FAC = ELEMENTARY_CHARGE / 4 / np.pi / EPSILON_0  # V/Å
 
         distance = np.sqrt(
             (x_pointcharge - mesh_x) ** 2
