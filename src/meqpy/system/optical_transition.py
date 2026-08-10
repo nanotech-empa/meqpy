@@ -14,13 +14,16 @@ EPSILON_0 = const.epsilon_0 * 1e-10  # As/Vm * m/Å = As/VÅ
 
 
 class OpticalTransition(Transition):
+    """
+    Class for calculating coupling strength to tip plasmon from transition density cube.
+    """
+
     def __init__(
         self,
-        cube: Cube | str | os.PathLike = None,
+        cube: Cube | str | os.PathLike,
         center_mass: bool = True,
     ):
-        """Initialize OpticalTransition instance for radiative transitions within Molecule.
-        The cube data of the corresponding transition density orbital is used to
+        """The volumetric data of the corresponding transition density orbital is used to
         calculate tip position dependent coupling to the junction plasmon using
         a simple two-point-charge model.
 
@@ -36,9 +39,6 @@ class OpticalTransition(Transition):
         TypeError | FileNotFoundError
             If `cube` is neither instance of Cube class, nor path to a cube file.
         """
-
-        self.data = None
-        """Volumetric data."""
 
         cube = super().file_to_cube(cube)
         super().parse_cube_dimensions(cube=cube, center_mass=center_mass)
