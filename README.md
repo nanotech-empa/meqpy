@@ -1,6 +1,22 @@
 # meqpy
+
+[![Documentation Status](https://app.readthedocs.org/projects/meqpy/badge/?version=latest)](https://meqpy.readthedocs.io/en/latest/)
+
 A code for solving master equations for STM
 
+## Documentation
+
+Documentation and tutorials are available at [meqpy.readthedocs.io](https://meqpy.readthedocs.io/en/latest/).
+
+To build the docs locally:
+
+```
+pip install -r docs/requirements.txt
+pip install -e .
+cd docs && make html
+```
+
+then open `docs/build/html/index.html` in a browser.
 
 ## For developers
 
