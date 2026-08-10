@@ -129,7 +129,7 @@ class Transition:
 
         validate_nonnegative_int(pad, "pad")
 
-        if not hasattr(self, "data"):
+        if self.shape == (0,):
             raise AttributeError("No volumetric data in object.")
 
         axes_grids = []
