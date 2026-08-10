@@ -31,7 +31,7 @@ myst_fence_as_directive = ["math"]
 
 # Notebooks: render the outputs already saved in the .ipynb files,
 # don't re-execute them on Read the Docs (no compute needed there).
-nb_execution_mode = "off"
+nb_execution_mode = "force"
 
 # The tutorials use raw-HTML anchors (<a id='...'>) for internal navigation.
 # They work in the built pages, but myst can't verify them and would warn.
@@ -54,7 +54,7 @@ intersphinx_mapping = {
     "python": ("https://docs.python.org/3", None),
     "numpy": ("https://numpy.org/doc/stable/", None),
     "scipy": ("https://docs.scipy.org/doc/scipy/", None),
-    "ase": ("https://ase-lib.org/", None),
+    "ase": ("https://ase.gitlab.io/ase/", None),
 }
 
 # autodoc defaults: document members in source order, include __init__ docs.
