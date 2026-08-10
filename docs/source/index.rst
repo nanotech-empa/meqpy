@@ -20,8 +20,8 @@ Quick start
 
    system = meqpy.System()
 
-See the `tutorial notebooks <https://github.com/nanotech-empa/meqpy/tree/main/tutorial>`_
-for worked examples.
+See the :doc:`tutorials <tutorials/index>` for worked examples; the notebooks
+live in ``docs/source/tutorials/`` if you want to run them interactively.
 
 .. toctree::
    :maxdepth: 2

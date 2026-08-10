@@ -32,7 +32,13 @@ nb_execution_mode = "off"
 suppress_warnings = ["myst.xref_missing"]
 
 templates_path = ["_templates"]
-exclude_patterns = []
+
+# Data folders that live next to the tutorial notebooks but are not doc pages.
+exclude_patterns = [
+    "tutorials/tutorial_files",
+    "tutorials/dyson_from_2pz_vector",
+    "**/.ipynb_checkpoints",
+]
 
 # Cross-link types like `numpy.ndarray` to the external docs.
 intersphinx_mapping = {

@@ -18,4 +18,4 @@ repos:
     -   id: ruff-format
         types_or: [python, pyi, jupyter]
 
-exclude: ^tutorial/tutorial_files/
+exclude: ^docs/source/tutorials/(tutorial_files|dyson_from_2pz_vector)/
