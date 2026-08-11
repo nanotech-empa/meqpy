@@ -51,8 +51,6 @@ class OpticalTransition(Transition):
         """Create Meshgrid of shape ``(2*nx'+1, 2*ny'+1, nz)``
         with x,y axis being symmetric around 0, with ni' = ni + 2*pad."""
 
-        validate_nonnegative_int(pad, "pad")
-
         nz = self.shape[2]
         num_pts = [range(-n - pad, n + pad + 1) for n in self.shape[:2]] + [range(nz)]
         mesh_indices = np.meshgrid(*num_pts, indexing="ij")
@@ -65,34 +63,12 @@ class OpticalTransition(Transition):
 
     @staticmethod
     def _coulomb_potential(
-        mesh_x: np.ndarray,
-        mesh_y: np.ndarray,
-        mesh_z: np.ndarray,
-        x_pointcharge: float,
-        y_pointcharge: float,
+        mesh: np.ndarray,
         z_pointcharge: float,
     ):
-        """Fill meshgrid with Coulomb potential of elementary charge located at position (x, y, z)."""
+        """Fill meshgrid with Coulomb potential of elementary charge located at position (0, 0, z_pointcharge)."""
 
-        require_type(mesh_x, np.ndarray, "mesh_x")
-        require_type(mesh_y, np.ndarray, "mesh_y")
-        require_type(mesh_z, np.ndarray, "mesh_z")
-
-        require_type(x_pointcharge, Real, "x_pointcharge")
-        require_type(y_pointcharge, Real, "y_pointcharge")
-        require_type(z_pointcharge, Real, "z_pointcharge")
-
-        if not mesh_x.shape == mesh_y.shape == mesh_z.shape:
-            raise ValueError(
-                "mesh_x, mesh_y and mesh_z must be of same shape, but got "
-                f"arrays with shape {mesh_x.shape},  {mesh_y.shape}, and  {mesh_z.shape}"
-            )
-
-        distance = np.sqrt(
-            (x_pointcharge - mesh_x) ** 2
-            + (y_pointcharge - mesh_y) ** 2
-            + (z_pointcharge - mesh_z) ** 2
-        )
+        distance = np.sqrt(mesh[0] ** 2 + mesh[1] ** 2 + (mesh[2] - z_pointcharge) ** 2)
 
         too_close = distance < 1.0
         safe_distance = np.where(too_close, 1.0, distance)
@@ -102,28 +78,18 @@ class OpticalTransition(Transition):
     @classmethod
     def _two_point_charges(
         cls,
-        mesh_x: np.ndarray,
-        mesh_y: np.ndarray,
-        mesh_z: np.ndarray,
+        mesh: np.ndarray,
         mirror_plane: float,
         z_pointcharge: float,
-        x_pointcharge: float = 0,
-        y_pointcharge: float = 0,
     ):
         """Fill meshgrid with Coulomb potential of two elementary charge located
-        at position (x, y, z) and (x, y, 2 * mirror_plane - z)."""
-
-        require_type(mirror_plane, Real, "mirror_plane")
-        require_type(z_pointcharge, Real, "z_pointcharge")
+        at position (0, 0, z) and (0, 0, 2 * mirror_plane - z)."""
 
         z_up = z_pointcharge
         z_down = 2 * mirror_plane - z_pointcharge
-        potential = cls._coulomb_potential(
-            mesh_x, mesh_y, mesh_z, x_pointcharge, y_pointcharge, z_up
-        )
-        potential -= cls._coulomb_potential(
-            mesh_x, mesh_y, mesh_z, x_pointcharge, y_pointcharge, z_down
-        )
+        potential = cls._coulomb_potential(mesh, z_up)
+        potential -= cls._coulomb_potential(mesh, z_down)
+
         return potential
 
     def plasmon_coupling(self, mirror_plane: float, z_pointcharge: float, pad: int = 0):
@@ -144,8 +110,13 @@ class OpticalTransition(Transition):
         plasmon_coupling : np.ndarray
             2D array containing plasmon coupling strength to transition density for each point in grid.
         """
+
+        require_type(mirror_plane, Real, "mirror_plane")
+        require_type(z_pointcharge, Real, "z_pointcharge")
+        validate_nonnegative_int(pad, "pad")
+
         kernel_mesh = self._kernel_mesh(pad)
-        potential = self._two_point_charges(*kernel_mesh, mirror_plane, z_pointcharge)
+        potential = self._two_point_charges(kernel_mesh, mirror_plane, z_pointcharge)
 
         padding = ((pad, pad), (pad, pad), (0, 0))
         data = np.pad(self.data, padding)
@@ -177,6 +148,8 @@ class OpticalTransition(Transition):
         emission_strength : np.ndarray
             2D array containing plasmon induced emission strength for each point in grid.
         """
+
+        require_type(normalize, bool, "normalize")
 
         plasmon_coupling = self.plasmon_coupling(mirror_plane, z_pointcharge, pad)
         emission_strength = plasmon_coupling**2
