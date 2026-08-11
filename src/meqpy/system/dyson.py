@@ -88,19 +88,9 @@ class Dyson(Transition):
         self.data = cube.get_slice_data(distance, axis=2) / BOHR**1.5
 
     @property
-    def shape(self) -> tuple[int, int]:
-        """Shape of sliced data."""
-        return self.data.shape
-
-    @property
-    def x(self):
-        """x values of cube"""
-        return super().get_cart_axis(0)
-
-    @property
-    def y(self):
-        """y values of cube grid"""
-        return super().get_cart_axis(1)
+    def z(self):
+        """z values of wavefunction slice"""
+        return np.array([self.slice_height])
 
     def extrapolate_wavefunction(
         self,

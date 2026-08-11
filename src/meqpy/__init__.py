@@ -9,6 +9,7 @@ from .system.system import System
 from .system.state import State
 from .system.transition import Transition
 from .system.dyson import Dyson
+from .system.optical_transition import OpticalTransition
 from .system.molecule import Molecule
 from .system.band_transition import BandTransition
 from .system.band_system import BandSystem
@@ -25,6 +26,7 @@ __all__ = [
     "State",
     "Transition",
     "Dyson",
+    "OpticalTransition",
     "Molecule",
     "BandTransition",
     "BandSystem",
