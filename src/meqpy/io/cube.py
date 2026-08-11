@@ -71,7 +71,8 @@ class Cube:
     @property
     def voxel_size(self):
         """Returns the volume of a voxel in Å³"""
-        return np.dot(self.spacing[0], np.cross(self.spacing[1], self.spacing[2]))
+        volume = np.dot(self.spacing[0], np.cross(self.spacing[1], self.spacing[2]))
+        return abs(volume)
 
     @property
     def magsqr(self):
