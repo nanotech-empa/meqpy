@@ -44,11 +44,8 @@ class OpticalTransition(Transition):
         super().parse_cube_dimensions(cube=cube, center_mass=center_mass)
         self.data = cube.data / BOHR**1.5
 
-    @property
-    def voxel_size(self):
-        """Returns the volume of a voxel in Å³"""
-        volume = np.dot(self.spacing[0], np.cross(self.spacing[1], self.spacing[2]))
-        return abs(volume)
+        self.voxel_size = cube.voxel_size
+        """Volume of a voxel in Å³"""
 
     def _kernel_mesh(self, pad: int = 0):
         """Create Meshgrid of shape ``(2*nx'+1, 2*ny'+1, nz)``
