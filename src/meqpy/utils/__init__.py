@@ -1,5 +1,6 @@
 from .types import (
     validate_nonnegative_float,
+    validate_positive_float,
     validate_float_larger_one,
     validate_nonnegative_int,
     validate_positive_int,
@@ -18,12 +19,14 @@ from .lineshape import (
 )
 from .coordinates import pad_lin_extrapolate, value_to_index
 from .tersoff_hamann import ldos_to_rate
+from .polaron import polaron_spectrum, Jrect
 
 __all__ = [
     "KappaMode",
     "LineShape",
     "evaluate_lineshape",
     "validate_nonnegative_float",
+    "validate_positive_float",
     "validate_float_larger_one",
     "validate_nonnegative_int",
     "validate_positive_int",
@@ -38,4 +41,6 @@ __all__ = [
     "pad_lin_extrapolate",
     "value_to_index",
     "ldos_to_rate",
+    "polaron_spectrum",
+    "Jrect",
 ]
