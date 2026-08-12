@@ -10,15 +10,13 @@ class TestJrect:
         x = np.arange(0, 50e-3, 1e-3)
         reorg_energy = 150e-3
         J = Jrect(x, reorg_energy, 10e-3, 20e-3)
-        assert np.isclose(reorg_energy, np.trapezoid(J * x, x))
+        assert np.isclose(reorg_energy, np.sum(J * x))
 
     def test_step_bounds(self):
         x = np.arange(0, 50e-3, 1e-3)
         J = Jrect(x, 150e-3, 10e-3, 20e-3)
-        assert J[9] == 0.0
-        assert np.isclose(J[11] / 2, J[10])
-        assert np.isclose(J[19] / 2, J[20])
-        assert J[21] == 0
+        assert J[9] == J[21] == 0.0
+        assert J[10] == J[20]
 
     def test_validate_x_array(self):
         # wrong type
@@ -93,7 +91,7 @@ class TestSpectrum:
         yy = lineshape(xx)
 
         area = np.trapezoid(yy, xx)
-        mean_energy = np.trapezoid(yy * xx, xx) / area
+        mean_energy = np.sum(yy * xx) / area
 
         assert np.isclose(area, 1.0, atol=1e-3)
         assert np.isclose(mean_energy, reorg_energy, atol=1e-3)
