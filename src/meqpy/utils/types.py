@@ -1,3 +1,4 @@
+import operator
 from enum import Enum
 from numbers import Real
 from typing import Sequence
@@ -15,21 +16,29 @@ class ValidatedEnum(Enum):
         )
 
 
-def _make_bounded_number_validator(caster, type_check, *, minimum=None):
+def _make_bounded_number_validator(
+    caster, type_check, *, minimum=None, include_bound=True
+):
+    compare = operator.ge if include_bound else operator.gt
+    symbol = ">=" if include_bound else ">"
+
     def validator(value, name="value"):
         if not isinstance(value, type_check):
             raise TypeError(
                 f"{name} must be {type_check.__name__}, got {type(value).__name__}"
             )
         value = caster(value)
-        if minimum is not None and value < minimum:
-            raise ValueError(f"{name} must be >= {minimum}, got {value}")
+        if minimum is not None and not compare(value, minimum):
+            raise ValueError(f"{name} must be {symbol} {minimum}, got {value}")
         return value
 
     return validator
 
 
 validate_nonnegative_float = _make_bounded_number_validator(float, Real, minimum=0)
+validate_positive_float = _make_bounded_number_validator(
+    float, Real, minimum=0, include_bound=False
+)
 validate_float_larger_one = _make_bounded_number_validator(float, Real, minimum=1)
 validate_nonnegative_int = _make_bounded_number_validator(int, int, minimum=0)
 validate_positive_int = _make_bounded_number_validator(int, int, minimum=1)

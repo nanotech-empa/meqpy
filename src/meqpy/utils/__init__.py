@@ -1,5 +1,6 @@
 from .types import (
     validate_nonnegative_float,
+    validate_positive_float,
     validate_float_larger_one,
     validate_nonnegative_int,
     validate_positive_int,
@@ -24,6 +25,7 @@ __all__ = [
     "LineShape",
     "evaluate_lineshape",
     "validate_nonnegative_float",
+    "validate_positive_float",
     "validate_float_larger_one",
     "validate_nonnegative_int",
     "validate_positive_int",

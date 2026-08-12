@@ -19,7 +19,7 @@ from .master_equation.equilibrium import (
     fill_diagonal,
 )
 from .master_equation.measurement import measurement
-from .utils import constants
+from .utils import constants, polaron
 
 __all__ = [
     "System",
@@ -37,4 +37,5 @@ __all__ = [
     "Cube",
     "Cube_2pz",
     "constants",
+    "polaron",
 ]
