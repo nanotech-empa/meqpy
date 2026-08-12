@@ -129,7 +129,7 @@ def Jrect(x: np.ndarray, reorg_energy: float, x_min: float, x_max: float) -> np.
         raise ValueError("x_max must be larger than x_min")
 
     rect = np.heaviside(x - x_min, 1.0) * np.heaviside(x_max - x, 1.0)
-    return rect * reorg_energy / np.sum(rect * x)
+    return rect * reorg_energy / np.trapezoid(rect * x, x)
 
 
 def _lorentzian(x: np.ndarray, hwhm: float) -> np.ndarray:

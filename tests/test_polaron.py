@@ -10,7 +10,7 @@ class TestJrect:
         x = np.arange(0, 50e-3, 1e-3)
         reorg_energy = 150e-3
         J = Jrect(x, reorg_energy, 10e-3, 20e-3)
-        assert np.isclose(reorg_energy, np.sum(J * x))
+        assert np.isclose(reorg_energy, np.trapezoid(J * x, x))
 
     def test_step_bounds(self):
         x = np.arange(0, 50e-3, 1e-3)
@@ -91,7 +91,7 @@ class TestSpectrum:
         yy = lineshape(xx)
 
         area = np.trapezoid(yy, xx)
-        mean_energy = np.sum(yy * xx) / area
+        mean_energy = np.trapezoid(yy * xx, xx) / area
 
         assert np.isclose(area, 1.0, atol=1e-3)
         assert np.isclose(mean_energy, reorg_energy, atol=1e-3)
