@@ -19,7 +19,6 @@ from .lineshape import (
 )
 from .coordinates import pad_lin_extrapolate, value_to_index
 from .tersoff_hamann import ldos_to_rate
-from .polaron import polaron_spectrum, Jrect
 
 __all__ = [
     "KappaMode",
@@ -41,6 +40,4 @@ __all__ = [
     "pad_lin_extrapolate",
     "value_to_index",
     "ldos_to_rate",
-    "polaron_spectrum",
-    "Jrect",
 ]

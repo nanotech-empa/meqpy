@@ -2,7 +2,7 @@ from typing import Callable
 import numpy as np
 import pytest
 
-from meqpy.utils import polaron_spectrum, Jrect
+from meqpy.utils.polaron import spectrum, Jrect
 
 
 class TestJrect:
@@ -73,7 +73,7 @@ class TestSpectrum:
         dx = 1e-3
         x = np.arange(0, 50e-3, dx)
         J = Jrect(x, 150e-3, 10e-3, 20e-3)
-        lineshape = polaron_spectrum(J, dx)
+        lineshape = spectrum(J, dx)
         assert isinstance(lineshape, Callable)
         assert isinstance(lineshape(x), np.ndarray)
 
@@ -84,7 +84,7 @@ class TestSpectrum:
         reorg_energy = 150e-3
         J = Jrect(x, reorg_energy, 10e-3, 20e-3)
 
-        lineshape = polaron_spectrum(
+        lineshape = spectrum(
             J, dx, energy_range=1.0, lorentzian=1e-3, gaussian=1e-3, integrate=False
         )
         xx = np.arange(-1.0, 1.0, dx)
@@ -100,7 +100,7 @@ class TestSpectrum:
         dx = 1e-3
         x = np.arange(0, 50e-3, dx)
         J = Jrect(x, 150e-3, 10e-3, 20e-3)
-        lineshape = polaron_spectrum(J, dx)
+        lineshape = spectrum(J, dx)
         assert lineshape(-1.5) == 0.0
         assert lineshape(1.5) == 1.0
 
@@ -108,7 +108,7 @@ class TestSpectrum:
         dx = 1e-3
         x = np.arange(0, 50e-3, dx)
         J = Jrect(x, 150e-3, 10e-3, 20e-3)
-        lineshape = polaron_spectrum(J, dx, integrate=False)
+        lineshape = spectrum(J, dx, integrate=False)
         int_lineshape = np.sum(lineshape(np.arange(-1, 1, 1e-3))) * 1e-3
         assert lineshape(-1.5) == 0.0
         assert lineshape(1.5) == 0.0
@@ -116,30 +116,26 @@ class TestSpectrum:
 
     def test_lorentzian_hwhm(self):
         hwhm = 50e-3
-        lineshape = polaron_spectrum(
-            0, 1e-4, lorentzian=hwhm, gaussian=0, integrate=False
-        )
+        lineshape = spectrum(0, 1e-4, lorentzian=hwhm, gaussian=0, integrate=False)
         assert np.isclose(lineshape(hwhm) / lineshape(0), 0.5, atol=1e-5)
         assert np.isclose(lineshape(-hwhm) / lineshape(0), 0.5, atol=1e-5)
 
     def test_gaussian_hwhm(self):
         hwhm = 50e-3
-        lineshape = polaron_spectrum(
-            0, 1e-4, lorentzian=0, gaussian=hwhm, integrate=False
-        )
+        lineshape = spectrum(0, 1e-4, lorentzian=0, gaussian=hwhm, integrate=False)
         assert np.isclose(lineshape(hwhm) / lineshape(0), 0.5, atol=1e-5)
         assert np.isclose(lineshape(-hwhm) / lineshape(0), 0.5, atol=1e-5)
 
     def test_J_type_validation(self):
         with pytest.raises(TypeError):
-            polaron_spectrum("not_an_array", 1e-3)
+            spectrum("not_an_array", 1e-3)
 
     def test_integrate_type_validation(self):
         dx = 1e-3
         x = np.arange(0, 50e-3, dx)
         J = Jrect(x, 150e-3, 10e-3, 20e-3)
         with pytest.raises(TypeError):
-            polaron_spectrum(J, dx, integrate="yes")
+            spectrum(J, dx, integrate="yes")
 
     def test_J_domain_must_fit_inside_energy_range(self):
         dx = 1e-3
@@ -147,12 +143,12 @@ class TestSpectrum:
         J_long = Jrect(x_long, 0.15, 10e-3, 20e-3)
 
         with pytest.raises(ValueError):
-            polaron_spectrum(J_long, dx, energy_range=0.05)
+            spectrum(J_long, dx, energy_range=0.05)
 
     def test_negative_J_rejected(self):
         dx = 1e-3
         x = np.arange(0, 50e-3, dx)
         J = -Jrect(x, 0.15, 10e-3, 20e-3)
         with pytest.raises(ValueError) as e_info:
-            polaron_spectrum(J, dx, integrate=False)
+            spectrum(J, dx, integrate=False)
         assert str(e_info.value) == "J must not contain negative values."

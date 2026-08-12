@@ -13,7 +13,7 @@ from ..utils.types import (
 )
 
 
-def polaron_spectrum(
+def spectrum(
     J: np.ndarray,
     dx: float,
     energy_range: float = 1.0,
