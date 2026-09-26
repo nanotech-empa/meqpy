@@ -28,17 +28,19 @@ class Cube_2pz(Cube):
         Parameters
         ----------
         positions : (N,3) np.ndarray
-            Positions of hopping sites.
+            Positions, in Angstrom, of sites (i.e., 2pz orbital centers).
         eigenvector : (N,) np.ndarray
-            Wavefunction in basis of hopping sites.
-        boundary : float, optional
-            Boundary in Angstrom around atoms to determine cube size, by default 5.0
-        spacing : float, optional
-            Step size of cube grid, by default 0.333333*Bohr
-        elements : np.ndarray, optional
-            List of elements of hopping sites, defaults to carbon.
+            Wavefunction in basis of sites.
+        boundary : float >= 0, optional
+            Boundary, in Angstrom, added around extreme sites to define cell, by default 5.0.
+        spacing : float > 0, optional
+            Step size, in Angstrom, of cube grid, by default 0.333333*Bohr.
+        elements : (N,) np.ndarray, optional
+            List of elements of sites (string of element or integer of atomic number), defaults to
+            carbon ("C" or 6) for all sites.
+            String of chemical formula is also accepted.
         fill_cube : bool, optional
-            Calculate wavefunction in cube for all points, by default False
+            Calculate wavefunction in cube for all points, by default False.
         """
 
         self.set_positions_and_eigenvector(positions, eigenvector)
@@ -139,6 +141,7 @@ class Cube_2pz(Cube):
 
     def orbital_2pz(self, x: float, y: float, z: float, atom: Atoms) -> np.ndarray:
         """Calculate the 2pz orbital contribution of an atom at given coordinates.
+        Follows https://journals.aps.org/pr/pdf/10.1103/PhysRev.36.57.
 
         Parameters
         ----------
@@ -165,12 +168,15 @@ class Cube_2pz(Cube):
 
         # effective nuclear charge
         Zeff = atom.number
-        Zeff -= 2 * 0.85
-        Zeff -= (atom.number - 3) * 0.35
+        Zeff -= 2 * 0.85  # full 1s shell
+        Zeff -= (
+            np.max([atom.number - 3, 7]) * 0.35
+        )  # remaining electrons in 2s, 2p shells
 
         # decay constant
         alpha = Zeff / 2.0 / Bohr
 
+        # normalization
         prefactor = np.sqrt(alpha**5 / np.pi) * Bohr**1.5
 
         return zdiff * np.exp(-alpha * rdiff_abs) * prefactor
