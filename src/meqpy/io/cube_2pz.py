@@ -31,7 +31,7 @@ class Cube_2pz(Cube):
             Positions, in Angstrom, of sites (i.e., 2pz orbital centers).
         eigenvector : (N,) np.ndarray
             Wavefunction in basis of sites.
-        boundary : float >= 0, optional
+        boundary : float, optional
             Boundary, in Angstrom, added around extreme sites to define cell, by default 5.0.
         spacing : float > 0, optional
             Step size, in Angstrom, of cube grid, by default 0.333333*Bohr.
@@ -171,7 +171,7 @@ class Cube_2pz(Cube):
         Zeff -= 2 * 0.85  # full 1s shell
         Zeff -= (
             np.max([atom.number - 3, 7]) * 0.35
-        )  # remaining electrons in 2s, 2p shells
+        )  # remaining electrons in 2s, 2p shells, at most 7
 
         # decay constant
         alpha = Zeff / 2.0 / Bohr
