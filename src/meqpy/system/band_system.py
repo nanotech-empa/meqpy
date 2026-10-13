@@ -178,7 +178,7 @@ class BandSystem(System):
         if kappa_mode is not KappaMode.FULL:
             kappa_mat = kappa_mat[0]
 
-        kappa_mat = np.sqrt(kappa_mat + band.kpar**2)
+        kappa_mat = np.sqrt(kappa_mat**2 + band.kpar**2)
 
         if squeeze:
             kappa_mat = np.squeeze(kappa_mat)
