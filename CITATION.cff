@@ -5,7 +5,7 @@ title: meqpy
 message: If you use this software, please cite it and identify the exact version or commit
   used. See README.md for software attribution and applicable scientific references.
 authors:
-- family-names: Ortega Guerrero
+- family-names: Ortega-Guerrero
   given-names: Andres
 - family-names: Catarina
   given-names: Gonçalo
