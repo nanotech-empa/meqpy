@@ -191,6 +191,9 @@ cython_debug/
 # Ruff stuff:
 .ruff_cache/
 
+# Reproducible example outputs (data and figures are uploaded by CI).
+artifacts/
+
 # PyPI configuration file
 .pypirc
 

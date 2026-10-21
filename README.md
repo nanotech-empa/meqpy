@@ -4,6 +4,14 @@
 
 A code for solving master equations for STM
 
+## Reproducible calculation example
+
+The [pentacene reference example](docs/source/tutorials/dyson_from_2pz_vector/README.md)
+runs the same calculation from a notebook or the command line. CI checks the
+current and populations and uploads the numerical data, parameters, diagnostic
+report, figures, and executed notebook for review. It uses model orbitals and
+provides a regression baseline for future changes.
+
 ## Documentation
 
 Documentation and tutorials are available at [meqpy.readthedocs.io](https://meqpy.readthedocs.io/en/latest/).

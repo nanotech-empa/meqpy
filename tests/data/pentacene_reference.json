@@ -1,0 +1,132 @@
+{
+  "source_commit": "ebc6965e3e01fad739a0c95496c6a32165c7105e",
+  "source_notebook": "docs/source/tutorials/dyson_from_2pz_vector/pentacene_example.ipynb",
+  "purpose": "Original implementation regression snapshot; not an independent physical reference.",
+  "map_shape": [
+    73,
+    127
+  ],
+  "iv_samples": [
+    {
+      "index": 0,
+      "bias_v": -1.2,
+      "current_na": -1.16361579973422,
+      "populations": [
+        0.969964247443571,
+        0.0,
+        0.0300357525564289
+      ]
+    },
+    {
+      "index": 33,
+      "bias_v": -0.8020100502512563,
+      "current_na": -1.16361579973422,
+      "populations": [
+        0.969964247443571,
+        0.0,
+        0.0300357525564289
+      ]
+    },
+    {
+      "index": 66,
+      "bias_v": -0.4040201005025126,
+      "current_na": -0.6948963412830769,
+      "populations": [
+        0.9820630361293534,
+        0.0,
+        0.017936963870646607
+      ]
+    },
+    {
+      "index": 100,
+      "bias_v": 0.0060301507537687815,
+      "current_na": 0.0,
+      "populations": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "index": 133,
+      "bias_v": 0.4040201005025126,
+      "current_na": 0.0,
+      "populations": [
+        1.0,
+        0.0,
+        0.0
+      ]
+    },
+    {
+      "index": 166,
+      "bias_v": 0.8020100502512564,
+      "current_na": 3.3929970110363072,
+      "populations": [
+        0.9124184987248654,
+        0.08758150127513462,
+        0.0
+      ]
+    },
+    {
+      "index": 199,
+      "bias_v": 1.2,
+      "current_na": 5.9848512702723164,
+      "populations": [
+        0.8455164394622459,
+        0.15448356053775406,
+        0.0
+      ]
+    }
+  ],
+  "map_samples": [
+    {
+      "index_xy": [
+        0,
+        0
+      ],
+      "current_na": -1.4735590725439483e-05
+    },
+    {
+      "index_xy": [
+        12,
+        25
+      ],
+      "current_na": -8.447945323655189
+    },
+    {
+      "index_xy": [
+        25,
+        50
+      ],
+      "current_na": -1.5977488306243806
+    },
+    {
+      "index_xy": [
+        36,
+        63
+      ],
+      "current_na": -0.0125377939304117
+    },
+    {
+      "index_xy": [
+        43,
+        48
+      ],
+      "current_na": -1.16361579973422
+    },
+    {
+      "index_xy": [
+        50,
+        90
+      ],
+      "current_na": -3.414681839609919
+    },
+    {
+      "index_xy": [
+        72,
+        126
+      ],
+      "current_na": -0.006974324032955261
+    }
+  ]
+}
