@@ -5,6 +5,20 @@ build-backend = "flit_core.buildapi"
 [tool.flit.module]
 name = "meqpy"
 
+[tool.flit.sdist]
+include = [
+    "docs/source/tutorials/dyson_from_2pz_vector/README.md",
+    "docs/source/tutorials/dyson_from_2pz_vector/pentacene_calculation.py",
+    "docs/source/tutorials/dyson_from_2pz_vector/pentacene_example.ipynb",
+    "docs/source/tutorials/dyson_from_2pz_vector/pentacene.xyz",
+    "docs/source/tutorials/dyson_from_2pz_vector/pentacene_HOMO.dat",
+    "docs/source/tutorials/dyson_from_2pz_vector/pentacene_LUMO.dat",
+    "docs/source/tutorials/dyson_from_2pz_vector/baseline/iv.png",
+    "docs/source/tutorials/dyson_from_2pz_vector/baseline/current_map.png",
+    "tests/test_pentacene_example.py",
+    "tests/data/pentacene_reference.json",
+]
+
 [project]
 name = "meqpy"
 dynamic = ["version", "description"]
@@ -32,6 +46,12 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+examples = [
+  "matplotlib",
+  "nbconvert",
+  "ipykernel",
+]
+
 dev = [
   "bumpver==2023.1129",
   "pre-commit==3.6.0",
