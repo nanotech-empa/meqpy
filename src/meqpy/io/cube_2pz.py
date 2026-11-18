@@ -170,7 +170,7 @@ class Cube_2pz(Cube):
         Zeff = atom.number
         Zeff -= 2 * 0.85  # full 1s shell
         Zeff -= (
-            np.max([atom.number - 3, 7]) * 0.35
+            np.min([atom.number - 3, 7]) * 0.35
         )  # remaining electrons in 2s, 2p shells, at most 7
 
         # decay constant
