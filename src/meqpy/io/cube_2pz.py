@@ -8,6 +8,7 @@ from ..utils.types import (
     require_type,
 )
 from numbers import Real
+from numpy.typing import ArrayLike
 
 
 # cube from TB vectors
@@ -139,9 +140,9 @@ class Cube_2pz(Cube):
         for atom, coeff in zip(self.atoms, self.eigenvector):
             self.data += self.orbital_2pz(XX, YY, ZZ, atom) * coeff
 
-    def orbital_2pz(self, x: float, y: float, z: float, atom: Atoms) -> np.ndarray:
-        """Calculate the 2pz orbital contribution of an atom at given coordinates.
-        Follows https://journals.aps.org/pr/pdf/10.1103/PhysRev.36.57.
+    def orbital_2pz(self, x: ArrayLike, y: ArrayLike, z: ArrayLike, atom: Atoms) -> np.ndarray:
+        """Slater-type 2pz orbital of `atom` evaluated on the (x, y, z) grid.
+        Zeff from Slater's rules (Phys. Rev. 36, 57, 1930); valid for Z = 3-10.
 
         Parameters
         ----------
@@ -170,7 +171,7 @@ class Cube_2pz(Cube):
         Zeff = atom.number
         Zeff -= 2 * 0.85  # full 1s shell
         Zeff -= (
-            np.max([atom.number - 3, 7]) * 0.35
+            np.min([atom.number - 3, 7]) * 0.35
         )  # remaining electrons in 2s, 2p shells, at most 7
 
         # decay constant
