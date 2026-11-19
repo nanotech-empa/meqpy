@@ -569,7 +569,8 @@ class System:
         The decay constant kappa is calculated based on the selected kappa_mode:
             - '10': kappa = log(10)/2.0
             - 'constant': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2 ) * 1e-10
-            - 'full': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * ( workfunction - deltaE + bias/2 )  / HBAR^2 ) * 1e-10
+            - 'full': kappa = sqrt( 2 * ELECTRON_MASS * ELEMENTARY_CHARGE * ( workfunction - delta + bias/2 )  / HBAR^2 ) * 1e-10
+                delta = -(deltaE + reorg_shift) * dQ
         """
 
         z = validate_real_or_1darray(z, "z")
@@ -610,7 +611,8 @@ class System:
         The decay constant kappa is calculated based on the selected kappa_mode:
             - '10': kappa = log(10)/2.0
             - 'constant': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2)*1e-10
-            - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - deltaE + bias/2) / HBAR^2)*1e-10
+            - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - delta + bias/2) / HBAR^2)*1e-10
+                delta = -(deltaE + reorg_shift) * dQ
         """
 
         kappa_mode = self._resolve_kappa_mode(kappa_mode)
