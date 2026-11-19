@@ -140,7 +140,7 @@ class Cube_2pz(Cube):
         for atom, coeff in zip(self.atoms, self.eigenvector):
             self.data += self.orbital_2pz(XX, YY, ZZ, atom) * coeff
 
-    def orbital_2pz(self, x: ArrayLike, y: ArrayLike, z: ArrayLike, atom: Atom) -> np.ndarray:
+    def orbital_2pz(self, x: ArrayLike, y: ArrayLike, z: ArrayLike, atom: Atoms) -> np.ndarray:
         """Slater-type 2pz orbital of `atom` evaluated on the (x, y, z) grid.
         Zeff from Slater's rules (Phys. Rev. 36, 57, 1930); valid for Z = 3-10.
 
