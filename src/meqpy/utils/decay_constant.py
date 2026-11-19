@@ -48,6 +48,7 @@ def decay_constant(
         - '10': kappa = log(10)/2.0
         - 'constant': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction) / HBAR^2)*1e-10
         - 'full': kappa = sqrt(2 * ELECTRON_MASS * ELEMENTARY_CHARGE * (workfunction - delta + bias/2) / HBAR^2)*1e-10
+            delta = -(deltaE + reorg_shift) * dQ
     """
 
     if isinstance(kappa_mode, str):
