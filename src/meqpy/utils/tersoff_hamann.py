@@ -33,4 +33,5 @@ def ldos_to_rate(tip_radius: float, kappa: np.ndarray) -> np.ndarray:
         * (tip_radius / BOHR) ** 2
         * np.exp(2 * kappa * tip_radius)
         / ELEMENTARY_CHARGE
+        * BOHR**3
     )
